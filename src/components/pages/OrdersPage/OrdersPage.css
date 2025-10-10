@@ -1,0 +1,93 @@
+/* OrdersPage.css */
+
+.orders-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.order-card:hover {
+  transform: translateY(-5px);
+}
+
+h3 {
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+p {
+  margin: 5px 0;
+  color: #555;
+}
+
+.order-items {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.order-items li {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.order-items li img {
+  width: 80px;
+  height: auto;
+  border-radius: 5px;
+  object-fit: cover;
+}
+
+.order-items li div {
+  flex-grow: 1;
+}
+
+.order-items li p {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .orders-container {
+    padding: 15px;
+  }
+
+  .order-card {
+    padding: 15px;
+  }
+
+  .order-items li {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .order-items li img {
+    width: 100px;
+  }
+}

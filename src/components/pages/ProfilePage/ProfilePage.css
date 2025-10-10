@@ -1,0 +1,98 @@
+.profile-container {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(135deg, #ffffff, #f8f9fa);
+    text-align: center;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.profile-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.profile-container h2 {
+    font-size: 26px;
+    color: #222;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.profile-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-details p {
+    font-size: 18px;
+    color: #444;
+    background: #ffffff;
+    padding: 12px 18px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s ease-in-out;
+}
+
+.profile-details p:hover {
+    background: #f1f1f1;
+}
+
+.profile-details p strong {
+    color: #000;
+    font-weight: 700;
+}
+
+/* View Orders Button */
+.view-orders {
+    margin-top: 20px;
+}
+
+.view-orders-btn {
+    background: #007bff;
+    color: #ffffff;
+    border: none;
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+    display: inline-block;
+    width: 100%;
+    max-width: 200px;
+}
+
+.view-orders-btn:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+.view-orders-btn:active {
+    transform: scale(0.98);
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .profile-container {
+        max-width: 90%;
+        padding: 20px;
+    }
+
+    .profile-details p {
+        font-size: 16px;
+        padding: 10px;
+    }
+
+    .view-orders-btn {
+        width: 90%;
+    }
+}

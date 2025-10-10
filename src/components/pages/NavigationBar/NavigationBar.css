@@ -1,0 +1,86 @@
+/* NavigationBar.css */
+.navbar {
+    background-color: #333;
+    color: white;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 98%;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: 50px;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+    flex: 1;
+    gap: 30px;
+}
+
+.nav-center {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    color: white;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: white;
+}
+
+.nav-links li {
+    cursor: pointer;
+    transition: color 0.3s ease-in-out;
+}
+
+.nav-links li:hover {
+    color: #f4a261;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .navbar {
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .nav-center {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+        align-items: center;
+    }
+}
+.logout-btn {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+}
+.logout-btn:hover {
+    background-color: darkred;
+}
+

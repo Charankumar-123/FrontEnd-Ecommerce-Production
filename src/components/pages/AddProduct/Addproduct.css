@@ -1,0 +1,59 @@
+/* Center the form on the page */
+.add-product-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+  }
+  
+  /* Style the form */
+  .add-product-form {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    width: 350px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  /* Form title */
+  .add-product-form h2 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #333;
+  }
+  
+  /* Input fields */
+  .add-product-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .add-product-form input:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+  
+  /* Submit button */
+  .add-product-form button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s ease-in-out;
+  }
+  
+  .add-product-form button:hover {
+    background: #0056b3;
+  }
+  
