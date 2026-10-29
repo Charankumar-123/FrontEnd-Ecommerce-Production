@@ -1,479 +1,218 @@
-// import React, { useEffect, useState } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import CartProductCard from "../../Cards/CartProductCard/CartProductCard.jsx";
-// import { clearCart, setCartItems, setTotalPrice } from "../../../redux/CartSlice";
-// import { addToOrder } from "../../../redux/OrderSlice"; // Import addToOrder action
-// import "./CartPage.css";
-// import { useNavigate } from "react-router-dom";
-// import { addOrder } from "../../../redux/Actions/OrderActions.jsx";
-
-// const CartPage = () => {
-//     const [cartItems, setCartItemsState] = useState([]);
-//     const [totalPrice, setTotalPriceState] = useState(0);
-//     const userId = useSelector((state) => state.auth.userDetail?.userId);
-//     const dispatch = useDispatch();
-//     const navigate = useNavigate();
-
-//     // Function to fetch cart items from the backend
-//     const fetchCartItems = async () => {
-//         try {
-//             const response = await fetch(`http://localhost:8080/get-all-cart-items/${userId}`, {
-//                 method: "GET",
-//                 headers: { "Content-Type": "application/json" },
-//             });
-
-//             if (!response.ok) {
-//                 throw new Error("Failed to fetch cart items");
-//             }
-
-//             const data = await response.json();
-//             console.log("fetched cart items=>",data);
-//             setCartItemsState(data);
-//             dispatch(setCartItems(data));
-//         } catch (error) {
-//             console.error("Error fetching cart items:", error);
-//         }
-//     }
-
-//     // Function to fetch total cart price from the backend
-//     const fetchTotalPrice = async () => {
-//         try {
-//             const response = await fetch(`http://localhost:8080/total/${userId}`, {
-//                 method: "GET",
-//                 headers: { "Content-Type": "application/json" },
-//             });
-
-//             if (!response.ok) {
-//                 throw new Error("Failed to fetch cart price");
-//             }
-
-//             const cartPrice = await response.json();
-//             setTotalPriceState(cartPrice.total || cartPrice);
-//             dispatch(setTotalPrice(cartPrice.total || cartPrice));
-//         } catch (error) {
-//             console.error("Error fetching cart total price:", error);
-//         }
-//     };
-
-//     useEffect(() => {
-//         if (userId) {
-//             fetchCartItems();
-//             fetchTotalPrice();
-//         }
-//     }, [userId]);
-
-//     // Function to handle adding/removing items in the cart
-//     // const handleUpdateCartQuantity = async (productId, quantity) => {
-//     //     if (quantity < 1) return;
-
-//     //     const updatedCartItems = cartItems.map(item => 
-//     //         item.productId === productId ? { ...item, quantity: quantity } : item
-//     //     );
-//     //     setCartItemsState(updatedCartItems);
-//     //     dispatch(setCartItems(updatedCartItems)); 
-
-//     //     const newTotalPrice = updatedCartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-//     //     setTotalPriceState(newTotalPrice);
-//     //     dispatch(setTotalPrice(newTotalPrice));
-
-//     //     try {
-//     //         const cartDto = {
-//     //             userId: userId,
-//     //             productId: productId,
-//     //             quantity: quantity,
-//     //         };
-
-//     //         const response = await fetch("http://localhost:8080/updateCartQuantity", {
-//     //             method: "PUT",
-//     //             headers: {
-//     //                 "Content-Type": "application/json",
-//     //             },
-//     //             body: JSON.stringify(cartDto),
-//     //         });
-
-//     //         if (!response.ok) {
-//     //             throw new Error("Failed to update cart quantity");
-//     //         }
-
-//     //         // const updatedCart = await response.json();
-//     //         // console.log("Updated Cart Response:", updatedCart);
-
-//     //         // Refresh the cart after updating quantity
-//     //         fetchCartItems();
-//     //         fetchTotalPrice();
-//     //     } catch (error) {
-//     //         console.error("Error updating cart quantity:", error);
-//     //     }
-//     // };
-
-//     const handleUpdateCartQuantity = async (productId, quantity) => {
-//         if (quantity < 1) return;
-    
-//         try {
-//             const cartDto = { userId, productId, quantity };
-    
-//             const response = await fetch("http://localhost:8080/updateCartQuantity", {
-//                 method: "PUT",
-//                 headers: { "Content-Type": "application/json" },
-//                 body: JSON.stringify(cartDto),
-//             });
-    
-//             if (!response.ok) {
-//                 throw new Error("Failed to update cart quantity");
-//             }
-    
-//             // Fetch updated cart data from the backend instead of modifying state manually
-//             await fetchCartItems();
-//             await fetchTotalPrice();
-//         } catch (error) {
-//             console.error("Error updating cart quantity:", error);
-//         }
-//     };
-    
-
-//     const handleAddToOrder = async () => {
-//         if (!userId) {
-//             console.error("User not logged in");
-//             return;
-//         }
-    
-//         const orderData = {
-//             userId: userId,
-//             cartItems: cartItems.map(cartItem => ({
-//                 productId: cartItem.productId,
-//                 quantity: cartItem.quantity,
-//                 price: cartItem.price,
-//             })),
-//             totalPrice,  // Ensure totalPrice is included
-//         };
-    
-//         console.log("Order Data being sent:", orderData); // Debugging log
-    
-//         try {
-//             await dispatch(addOrder(orderData));
-//             navigate("/payment"); 
-//             // Dispatch action to create order in backend
-//             // dispatch(clearCart());
-//              // Clear cart after order creation
-//              // Navigate to payment page
-//         } catch (error) {
-//             console.error("Error creating order:", error);
-//         }
-//     };
-    
-//     return (
-//         <div className="cart-container">
-//             <h2>Shopping Cart</h2>
-//             {cartItems.length === 0 ? (
-//                 <p>Cart is empty</p>
-//             ) : (
-//                 cartItems.map((item) => (
-//                     <CartProductCard
-//                         key={item.id}
-//                         item={item}
-//                         onIncrease={(productId, quantity) => handleUpdateCartQuantity(productId, quantity + 1)} // Increase quantity
-//                         onDecrease={(productId, quantity) => handleUpdateCartQuantity(productId, quantity - 1)} // Decrease quantity
-//                         onAddToOrder={handleAddToOrder} // Pass the add to order function
-//                     />
-//                 ))
-//             )}
-//             <h3>Total Price cart: ${totalPrice.toFixed(2)}</h3>
-//             <div className="center">
-//             <button onClick={handleAddToOrder} className="add-to-order-btn">
-//                     Add To Order
-//                 </button>
-//             </div>
-          
-//         </div>
-//     );
-// };
-
-// export default CartPage;
-
-//--------------------------------------------------------------------------
-
-
-// import React, { useEffect, useState } from "react";
-// import { useSelector, useDispatch } from "react-redux";
-// import CartProductCard from "../../Cards/CartProductCard/CartProductCard.jsx";
-// import { clearCart, setCartItems, setTotalPrice } from "../../../redux/CartSlice";
-// import { addToOrder } from "../../../redux/OrderSlice";
-// import "./CartPage.css";
-// import { useNavigate } from "react-router-dom";
-// import { addOrder } from "../../../redux/Actions/OrderActions.jsx";
-
-// const CartPage = () => {
-//     const [cartItems, setCartItemsState] = useState([]);
-//     const [totalPrice, setTotalPriceState] = useState(0);
-//     const userId = useSelector((state) => state.auth.userDetail?.userId);
-//     const dispatch = useDispatch();
-//     const navigate = useNavigate();
-//     const token = useSelector((state) => state.auth.token);
-
-//     // Fetch cart items from backend
-//     const fetchCartItems = async () => {
-//         try {
-//             const response = await fetch(`http://localhost:8080/get-all-cart-items/${userId}`, {
-//                 method: "GET",
-//                 headers: {
-//                     "Authorization": `Bearer ${token}`,
-//                     "Content-Type": "application/json",
-//                   },
-//             });
-
-//             if (!response.ok) {
-//                 throw new Error("Failed to fetch cart items");
-//             }
-
-//             const data = await response.json();
-//             console.log("Fetched cart items:", data);
-//             setCartItemsState(data);
-//             dispatch(setCartItems(data));
-//         } catch (error) {
-//             console.error("Error fetching cart items:", error);
-//         }
-//     };
-
-//     // Fetch total cart price from backend
-//     const fetchTotalPrice = async () => {
-//         try {
-//             const response = await fetch(`http://localhost:8080/total/${userId}`, {
-//                 method: "GET",
-//                 headers: {
-//                     "Authorization": `Bearer ${token}`,
-//                     "Content-Type": "application/json",
-//                   },
-//             });
-
-//             if (!response.ok) {
-//                 throw new Error("Failed to fetch cart price");
-//             }
-
-//             const cartPrice = await response.json();
-//             setTotalPriceState(cartPrice.total || cartPrice);
-//             dispatch(setTotalPrice(cartPrice.total || cartPrice));
-//         } catch (error) {
-//             console.error("Error fetching cart total price:", error);
-//         }
-//     };
-
-//     useEffect(() => {
-//         if (userId) {
-//             fetchCartItems();
-//             fetchTotalPrice();
-//         }
-//     }, [userId]);
-
-//     // ✅ Ensuring backend values are used for cart updates
-//     const handleUpdateCartQuantity = async (productId, quantity) => {
-//         if (quantity < 1) return;
-
-//         try {
-//             const cartDto = { userId, productId, quantity };
-//             console.log("putData=>",cartDto)
-//             const response = await fetch("http://localhost:8080/updateCartQuantity", {
-//                 method: "PUT",
-//                 headers: {
-//                     "Authorization": `Bearer ${token}`,
-//                     "Content-Type": "application/json",
-//                   },
-//                 body: JSON.stringify(cartDto),
-//             });
-
-//             if (!response.ok) {
-//                 throw new Error("Failed to update cart quantity");
-//             }
-//             const cartPrice = await response.json();
-
-//             console.log("cartPrice=>",cartPrice)
-//             // ✅ Always fetch latest data after update
-//             await fetchCartItems();
-//             await fetchTotalPrice();
-//         } catch (error) {
-//             console.error("Error updating cart quantity:", error);
-//         }
-//     };
-
-//     const handleAddToOrder = async () => {
-//         if (!userId) {
-//             console.error("User not logged in");
-//             return;
-//         }
-//         // console.log("orderData info =>",orderData)
-
-//         const orderData = {
-//             userId: userId,
-//             cartItems: cartItems.map(cartItem => ({
-//                 productId: cartItem.productId,
-//                 quantity: cartItem.quantity,
-//                 price: cartItem.productInfo.price,
-//             })),
-//             totalPrice,
-//         };
-
-//         console.log("Order Data being sent:", orderData);
-
-//         try {
-//             await dispatch(addOrder(orderData));
-//             navigate("/payment");
-//         } catch (error) {
-//             console.error("Error creating order:", error);
-//         }
-//     };
-//     console.log("cartitems => ",cartItems);
-
-//     return (
-//         <div className="cart-container">
-//             <h2>Shopping Cart</h2>
-//             {cartItems.length === 0 ? (
-//                 <p>Cart is empty</p>
-//             ) : (
-//                 cartItems.map((item) => (
-//                     <CartProductCard
-//                         key={item.id}
-//                         item={item}
-//                         onIncrease={handleUpdateCartQuantity}
-//                         onDecrease={handleUpdateCartQuantity}
-//                     />
-//                 ))
-//             )}
-//             <h3>Total Price cart: ${totalPrice.toFixed(2)}</h3>
-//             <div className="center">
-//                 <button onClick={handleAddToOrder} className="add-to-order-btn">
-//                     Add To Order
-//                 </button>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default CartPage;
-
-//-----------------------------------------------------------------------
-
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import CartProductCard from "../../Cards/CartProductCard/CartProductCard.jsx";
-import { clearCart, setCartItems, setTotalPrice } from "../../../redux/CartSlice";
-import { addToOrder } from "../../../redux/OrderSlice";
-import "./CartPage.css";
 import { useNavigate } from "react-router-dom";
+import CartProductCard from "../../Cards/CartProductCard/CartProductCard.jsx";
+import { setCartItems, setTotalPrice } from "../../../redux/CartSlice";
 import { addOrder } from "../../../redux/Actions/OrderActions.jsx";
-import { getCartItems, getTotalCartPrice, updateCartQuantity } from "../../../Services/CartService"; 
+import {
+  getCartItems,
+  getTotalCartPrice,
+  updateCartQuantity,
+  removeItemFromCart,
+} from "../../../Services/CartService";
+import "./CartPage.css";
 
 const CartPage = () => {
-    const [cartItems, setCartItemsState] = useState([]);
-    const [totalPrice, setTotalPriceState] = useState(0);
-    const userId = useSelector((state) => state.auth.userDetail?.userId);
-    const token = useSelector((state) => state.auth.token); // Get token from Redux
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-    // Fetch cart items using CartService
-    const fetchCartItems = async () => {
-        if (!userId || !token) {
-            console.error("User ID or token missing");
-            return;
-        }
-        try {
-            const data = await getCartItems(userId, token); // Pass token
-            console.log("Fetched cart items:", data);
-            setCartItemsState(data);
-            dispatch(setCartItems(data));
-        } catch (error) {
-            console.error("Error fetching cart items:", error);
-        }
+  const [cartItems, setCartItemsState] = useState([]);
+  const [totalPrice, setTotalPriceState] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  const userId = useSelector(
+    (state) => state.auth.userDetail?.userId || state.auth.userDetail?.userID
+  );
+  const token = useSelector((state) => state.auth.token) || localStorage.getItem("authToken");
+
+  const fetchCartData = async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const items = await getCartItems(userId, token);
+      const safeItems = Array.isArray(items) ? items : [];
+      setCartItemsState(safeItems);
+      dispatch(setCartItems(safeItems));
+
+      const priceRes = await getTotalCartPrice(userId, token);
+      const computedTotal =
+        typeof priceRes === "number"
+          ? priceRes
+          : priceRes?.total !== undefined
+          ? priceRes.total
+          : safeItems.reduce(
+              (acc, it) => acc + (it.productInfo?.price || 0) * (it.quantity || 1),
+              0
+            );
+
+      setTotalPriceState(computedTotal);
+      dispatch(setTotalPrice(computedTotal));
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCartData();
+  }, [userId, token]);
+
+  const handleUpdateQuantity = async (productId, newQuantity) => {
+    if (newQuantity < 1) {
+      handleRemoveItem(productId);
+      return;
+    }
+    try {
+      await updateCartQuantity(userId, productId, newQuantity, token);
+      await fetchCartData();
+    } catch (error) {
+      console.error("Error updating cart quantity:", error);
+    }
+  };
+
+  const handleRemoveItem = async (productId) => {
+    try {
+      await removeItemFromCart(userId, productId, token);
+      await fetchCartData();
+    } catch (error) {
+      console.error("Error removing cart item:", error);
+      // Fallback: update quantity to 0 or refetch
+      await fetchCartData();
+    }
+  };
+
+  const handleProceedToBuy = async () => {
+    if (!userId) {
+      navigate("/login");
+      return;
+    }
+    if (cartItems.length === 0) return;
+
+    const orderData = {
+      userId,
+      cartItems: cartItems.map((cartItem) => ({
+        productId: cartItem.productId,
+        quantity: cartItem.quantity,
+        price: cartItem.productInfo?.price || 0,
+      })),
+      totalPrice,
     };
 
-    // Fetch total cart price using CartService
-    const fetchTotalPrice = async () => {
-        if (!userId || !token) {
-            console.error("User ID or token missing");
-            return;
-        }
-        try {
-            const cartPrice = await getTotalCartPrice(userId, token); // Pass token
-            setTotalPriceState(cartPrice.total || cartPrice);
-            dispatch(setTotalPrice(cartPrice.total || cartPrice));
-        } catch (error) {
-            console.error("Error fetching cart total price:", error);
-        }
-    };
+    try {
+      await dispatch(addOrder(orderData));
+      navigate("/payment");
+    } catch (error) {
+      console.error("Error initiating checkout:", error);
+      navigate("/payment");
+    }
+  };
 
-    useEffect(() => {
-        if (userId && token) { // Only fetch if both userId and token are available
-            fetchCartItems();
-            fetchTotalPrice();
-        }
-    }, [userId, token]); // Add token as dependency
+  const totalItemsCount = cartItems.reduce((acc, it) => acc + (it.quantity || 1), 0);
 
-    // Update cart quantity using CartService
-    const handleUpdateCartQuantity = async (productId, quantity) => {
-        if (quantity < 1) return;
-
-        try {
-            await updateCartQuantity(userId, productId, quantity, token); // Pass token
-            console.log("Cart quantity updated successfully");
-            // Refresh cart data after update
-            await fetchCartItems();
-            await fetchTotalPrice();
-        } catch (error) {
-            console.error("Error updating cart quantity:", error);
-        }
-    };
-
-    const handleAddToOrder = async () => {
-        if (!userId || !token) {
-            console.error("User not logged in or token missing");
-            return;
-        }
-
-        const orderData = {
-            userId: userId,
-            cartItems: cartItems.map((cartItem) => ({
-                productId: cartItem.productId,
-                quantity: cartItem.quantity,
-                price: cartItem.productInfo.price, // Ensure price comes from productInfo
-            })),
-            totalPrice,
-        };
-
-        console.log("Order Data being sent:", orderData);
-
-        try {
-            await dispatch(addOrder(orderData));
-            navigate("/payment");
-        } catch (error) {
-            console.error("Error creating order:", error);
-        }
-    };
-
-    console.log("cartitems => ", cartItems);
-
+  if (loading) {
     return (
-        <div className="cart-container">
-            <h2>Shopping Cart</h2>
-            {cartItems.length === 0 ? (
-                <p>Cart is empty</p>
-            ) : (
-                cartItems.map((item) => (
-                    <CartProductCard
-                        key={item.id}
-                        item={item}
-                        onIncrease={(productId) => handleUpdateCartQuantity(productId, item.quantity + 1)} // Pass productId directly
-                        onDecrease={(productId) => handleUpdateCartQuantity(productId, item.quantity - 1)} // Pass productId directly
-                    />
-                ))
-            )}
-            <h3>Total Price cart: ${totalPrice.toFixed(2)}</h3>
-            <div className="center">
-                <button onClick={handleAddToOrder} className="add-to-order-btn">
-                    Add To Order
-                </button>
-            </div>
+      <div className="cart-page-wrapper">
+        <div className="cart-loading">
+          <div className="cart-spinner"></div>
+          <p>Loading your cart...</p>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="cart-page-wrapper">
+      <div className="cart-max-width">
+        <h1 className="cart-main-heading">Shopping Cart</h1>
+
+        {cartItems.length === 0 ? (
+          <div className="empty-cart-card">
+            <div className="empty-cart-icon">🛒</div>
+            <h2>Your ModernStore Cart is empty</h2>
+            <p>Your shopping cart is waiting for you. Explore our collection of premium products.</p>
+            <button className="cart-shop-now-btn" onClick={() => navigate("/")}>
+              Explore Store
+            </button>
+          </div>
+        ) : (
+          <div className="cart-two-column-layout">
+            {/* Left Column: Items */}
+            <div className="cart-items-column">
+              <div className="free-shipping-card">
+                <span className="free-shipping-icon">🎉</span>
+                <span>
+                  Your order qualifies for <strong>FREE Standard Delivery</strong>. Choose this option at checkout.
+                </span>
+              </div>
+
+              <div className="cart-items-list-card">
+                <div className="cart-table-header">
+                  <span>Product Details</span>
+                  <span className="cart-header-price">Price</span>
+                </div>
+
+                {cartItems.map((item) => (
+                  <CartProductCard
+                    key={item.id || item.productId}
+                    item={item}
+                    onIncrease={(productId, qty) => handleUpdateQuantity(productId, qty)}
+                    onDecrease={(productId, qty) => handleUpdateQuantity(productId, qty)}
+                    onRemove={(productId) => handleRemoveItem(productId)}
+                  />
+                ))}
+
+                <div className="cart-subtotal-footer">
+                  Subtotal ({totalItemsCount} {totalItemsCount === 1 ? "item" : "items"}):{" "}
+                  <strong>₹{totalPrice.toFixed(2)}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Sticky Summary */}
+            <div className="cart-summary-column">
+              <div className="cart-summary-card">
+                <h3 className="summary-title">Order Summary</h3>
+
+                <div className="summary-row">
+                  <span>Items Subtotal ({totalItemsCount}):</span>
+                  <span>₹{totalPrice.toFixed(2)}</span>
+                </div>
+
+                <div className="summary-row">
+                  <span>Delivery Charges:</span>
+                  <span className="free-tag">FREE</span>
+                </div>
+
+                <div className="summary-row">
+                  <span>Estimated Taxes:</span>
+                  <span>Included</span>
+                </div>
+
+                <hr className="summary-divider" />
+
+                <div className="summary-total-row">
+                  <span>Order Total:</span>
+                  <span className="summary-total-price">₹{totalPrice.toFixed(2)}</span>
+                </div>
+
+                <button onClick={handleProceedToBuy} className="proceed-to-buy-btn">
+                  Proceed to Checkout ({totalItemsCount})
+                </button>
+
+                <div className="summary-security-note">
+                  <span>🔒 Secure 256-bit SSL encrypted checkout</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default CartPage;
-

@@ -1,91 +1,163 @@
-.cart-product-card {
+/* Modern Teal Cart Item Row Styling */
+.cart-item-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 140px;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid #f1f5f9;
+  align-items: center;
+}
+
+.cart-item-row:last-child {
+  border-bottom: none;
+}
+
+/* Image Column */
+.cart-item-image-col {
+  width: 100px;
+  height: 90px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  background: #ffffff;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin: 15px 0;
-  transition: transform 0.2s ease-in-out;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.cart-product-card:hover {
-  transform: scale(1.02);
+.cart-item-thumb {
+  max-width: 90%;
+  max-height: 85%;
+  object-fit: contain;
+  transition: transform 0.2s ease;
 }
 
-.cart-product-details {
-  flex-grow: 1;
+.cart-item-thumb:hover {
+  transform: scale(1.06);
 }
 
-.cart-product-details h3 {
-  margin: 5px 0;
-  font-size: 18px;
-  color: #333;
+/* Details Column */
+.cart-item-details-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.cart-product-details p {
-  margin: 5px 0;
-  color: #666;
-  font-size: 14px;
+.cart-item-title-link {
+  text-decoration: none;
 }
 
-.cart-quantity {
+.cart-item-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.35;
+  transition: color 0.2s ease;
+}
+
+.cart-item-title:hover {
+  color: #00796b;
+}
+
+.cart-item-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 2px 0 4px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cart-item-instock {
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+/* Actions Row */
+.cart-item-actions-row {
   display: flex;
   align-items: center;
+  gap: 16px;
   margin-top: 10px;
 }
 
-.quantity-btn {
-  background-color: #007bff;
-  color: white;
+/* Stepper */
+.quantity-stepper {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.qty-btn {
+  background: #f8fafc;
   border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background 0.3s ease-in-out;
-  margin: 0 5px;
-}
-
-.quantity-btn:hover {
-  background-color: #0056b3;
-}
-
-.cart-quantity span {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-}
-
-.add-to-order-btn {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
+  padding: 5px 12px;
   font-size: 14px;
-  transition: background 0.3s ease-in-out;
-  margin-left: 10px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
-.add-to-order-btn:hover {
-  background-color: #218838;
+.qty-btn:hover {
+  background: #e2e8f0;
 }
 
-/* Responsive Design */
+.qty-number {
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cart-item-delete-btn {
+  background: transparent;
+  border: none;
+  color: #00796b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.cart-item-delete-btn:hover {
+  color: #c62828;
+  text-decoration: underline;
+}
+
+/* Price Column */
+.cart-item-price-col {
+  text-align: right;
+}
+
+.cart-item-total-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: #004d40;
+}
+
+.cart-item-unit-price {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
 @media (max-width: 600px) {
-  .cart-product-card {
-    flex-direction: column;
-    text-align: center;
+  .cart-item-row {
+    grid-template-columns: 80px 1fr;
+    gap: 12px;
   }
-
-  .cart-quantity {
-    justify-content: center;
-  }
-
-  .quantity-btn {
-    padding: 6px 10px;
+  .cart-item-price-col {
+    grid-column: span 2;
+    text-align: left;
+    margin-top: 8px;
   }
 }
