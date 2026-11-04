@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutR } from "../../../redux/authSlice";
 import { clearCart } from "../../../redux/CartSlice";
+import { getAuthToken, getStoredUser } from "../../../utils/cookieUtils";
 import "./NavigationBar.css";
 import { useState } from "react";
 
@@ -10,7 +11,7 @@ const NavigationBar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { userDetail, isLogin } = useSelector((state) => state.auth);
-  const token = useSelector((state) => state.auth.token) || localStorage.getItem("authToken");
+  const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
@@ -20,7 +21,7 @@ const NavigationBar = () => {
   let savedName = userDetail?.userName || userDetail?.name;
   if (!savedRole || !savedName) {
     try {
-      const savedUser = JSON.parse(localStorage.getItem("user"));
+      const savedUser = getStoredUser() || JSON.parse(localStorage.getItem("user"));
       if (savedUser) {
         savedRole = savedRole || savedUser.role;
         savedName = savedName || savedUser.userName || savedUser.name || (savedUser.email ? savedUser.email.split("@")[0] : "");

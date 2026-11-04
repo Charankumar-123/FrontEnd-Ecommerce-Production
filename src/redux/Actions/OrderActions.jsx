@@ -1,8 +1,9 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { getAuthToken } from '../../utils/cookieUtils';
 
-// Helper function to get the Authorization header
+// Helper function to get the Authorization header from cookie (with fallback)
 const getAuthHeaders = () => {
-    const token = localStorage.getItem("authToken"); // Retrieve token from localStorage
+    const token = getAuthToken() || localStorage.getItem("authToken");
     return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

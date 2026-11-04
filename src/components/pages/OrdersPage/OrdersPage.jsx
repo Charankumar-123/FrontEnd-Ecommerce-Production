@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { fetchOrders } from "../../../redux/Actions/OrderActions.jsx";
 import { addToCart } from "../../../redux/CartSlice";
 import { addItemToCart } from "../../../Services/CartService";
+import { getAuthToken, getStoredUser } from "../../../utils/cookieUtils";
 import "./OrdersPage.css";
 
 const STATUS_STEPS = ["Ordered", "Shipped", "Out for Delivery", "Delivered"];
@@ -22,14 +23,14 @@ const OrdersPage = () => {
   const navigate = useNavigate();
 
   const userDetail = useSelector((state) => state.auth.userDetail);
-  const token = useSelector((state) => state.auth.token) || localStorage.getItem("authToken");
+  const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
 
   let resolvedUserId = userDetail?.userId || userDetail?.userID;
   let resolvedName = userDetail?.userName || userDetail?.name;
 
   if (!resolvedUserId) {
     try {
-      const savedUser = JSON.parse(localStorage.getItem("user"));
+      const savedUser = getStoredUser() || JSON.parse(localStorage.getItem("user"));
       if (savedUser) {
         resolvedUserId = savedUser.userId || savedUser.userID;
         resolvedName = resolvedName || savedUser.userName || savedUser.name;

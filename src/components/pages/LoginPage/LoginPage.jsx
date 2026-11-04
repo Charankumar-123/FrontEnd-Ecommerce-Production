@@ -5,6 +5,7 @@ import "./Loginpage.css";
 import { loginR } from "../../../redux/authSlice";
 import { setCartItems } from "../../../redux/CartSlice";
 import { getAuthHeaders } from "../../../Services/UserService";
+import { setAuthToken } from "../../../utils/cookieUtils";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -66,7 +67,8 @@ const Login = () => {
       const data = await response.json();
       const { userID, userName, email, mobile, role, token } = data.data;
 
-      // Store JWT token in local storage
+      // Store JWT token in cookie
+      setAuthToken(token);
       localStorage.setItem("authToken", token);
 
       // Dispatch Redux action
@@ -92,6 +94,7 @@ const Login = () => {
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
+      setAuthToken(token);
       localStorage.setItem("authToken", token);
 
       // Fetch user info from backend

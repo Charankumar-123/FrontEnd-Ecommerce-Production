@@ -1,8 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { login as loginService } from "../Services/UserService";
+import {
+  getAuthToken,
+  setAuthToken,
+  removeAuthToken,
+  getStoredUser,
+  setStoredUser,
+  removeStoredUser,
+} from "../utils/cookieUtils";
 
-const savedToken = localStorage.getItem("authToken");
-const savedUserStr = localStorage.getItem("user");
+// Read auth token from cookies (with localStorage fallback for existing sessions)
+const savedToken = getAuthToken() || localStorage.getItem("authToken");
+const savedCookieUser = getStoredUser();
+const savedUserStr = !savedCookieUser ? localStorage.getItem("user") : null;
+
 let initialUserDetail = {
   userId: "",
   userID: "",
@@ -13,7 +24,19 @@ let initialUserDetail = {
   role: "",
 };
 
-if (savedUserStr) {
+if (savedCookieUser) {
+  const resolvedId = savedCookieUser.userID || savedCookieUser.userId || "";
+  const resolvedName = savedCookieUser.userName || savedCookieUser.name || "";
+  initialUserDetail = {
+    userId: resolvedId,
+    userID: resolvedId,
+    userName: resolvedName,
+    name: resolvedName,
+    email: savedCookieUser.email || "",
+    mobile: savedCookieUser.mobile || "",
+    role: savedCookieUser.role || "user",
+  };
+} else if (savedUserStr) {
   try {
     const parsed = JSON.parse(savedUserStr);
     const resolvedId = parsed.userID || parsed.userId || "";
@@ -45,6 +68,7 @@ const authSlice = createSlice({
       state.isLogin = true; 
       if (p.token) {
         state.token = p.token;
+        setAuthToken(p.token); // Store token in cookie
         localStorage.setItem("authToken", p.token);
       }
       const resolvedId = p.userID !== undefined ? p.userID : (p.userId !== undefined ? p.userId : state.userDetail.userId);
@@ -63,6 +87,7 @@ const authSlice = createSlice({
         role: resolvedRole,
       };
 
+      setStoredUser(state.userDetail); // Store user in cookie
       localStorage.setItem("user", JSON.stringify(state.userDetail));
     },
     logoutR: (state) => {
@@ -77,6 +102,8 @@ const authSlice = createSlice({
         mobile: "",
         role: "",
       };
+      removeAuthToken(); // Remove token from cookie
+      removeStoredUser(); // Remove user from cookie
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
     },

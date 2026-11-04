@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { loginR } from "../../../redux/authSlice";
+import { setAuthToken } from "../../../utils/cookieUtils";
 
 const OAuth2RedirectHandler = () => {
   const dispatch = useDispatch();
@@ -13,6 +14,7 @@ const OAuth2RedirectHandler = () => {
     const userID = searchParams.get("userID"); // if backend sends it
     console.log("userID", userID);
     if (token) {
+      setAuthToken(token);
       localStorage.setItem("authToken", token);
       dispatch(loginR({ token }));
       navigate("/"); // redirect to home
