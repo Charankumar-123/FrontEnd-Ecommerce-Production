@@ -10,6 +10,7 @@ import {
   updateCartQuantity,
   removeItemFromCart,
 } from "../../../Services/CartService";
+import { getAuthToken } from "../../../utils/cookieUtils";
 import "./CartPage.css";
 
 const CartPage = () => {
@@ -23,7 +24,7 @@ const CartPage = () => {
   const userId = useSelector(
     (state) => state.auth.userDetail?.userId || state.auth.userDetail?.userID
   );
-  const token = useSelector((state) => state.auth.token) || localStorage.getItem("authToken");
+  const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
 
   const fetchCartData = async () => {
     if (!userId) {
@@ -37,16 +38,18 @@ const CartPage = () => {
       setCartItemsState(safeItems);
       dispatch(setCartItems(safeItems));
 
+      // Calculate reliable sum from items
+      const itemsSum = safeItems.reduce((acc, it) => {
+        const unit = Number(it.productInfo?.price) || Number(it.price) || 0;
+        const qty = Number(it.quantity) || 1;
+        return acc + unit * qty;
+      }, 0);
+
       const priceRes = await getTotalCartPrice(userId, token);
-      const computedTotal =
-        typeof priceRes === "number"
-          ? priceRes
-          : priceRes?.total !== undefined
-          ? priceRes.total
-          : safeItems.reduce(
-              (acc, it) => acc + (it.productInfo?.price || 0) * (it.quantity || 1),
-              0
-            );
+      // If backend returns a valid positive number, use it; otherwise use itemsSum
+      const computedTotal = (typeof priceRes === "number" && !isNaN(priceRes) && priceRes > 0)
+        ? priceRes
+        : itemsSum;
 
       setTotalPriceState(computedTotal);
       dispatch(setTotalPrice(computedTotal));
@@ -66,21 +69,54 @@ const CartPage = () => {
       handleRemoveItem(productId);
       return;
     }
+
+    // Optimistically update quantity locally
+    const updated = cartItems.map((it) => {
+      if (it.productId === productId || it.productInfo?.id === productId) {
+        return { ...it, quantity: newQuantity };
+      }
+      return it;
+    });
+    setCartItemsState(updated);
+    const updatedTotal = updated.reduce((acc, it) => {
+      const unit = Number(it.productInfo?.price) || Number(it.price) || 0;
+      const qty = Number(it.quantity) || 1;
+      return acc + unit * qty;
+    }, 0);
+    setTotalPriceState(updatedTotal);
+
     try {
       await updateCartQuantity(userId, productId, newQuantity, token);
       await fetchCartData();
     } catch (error) {
       console.error("Error updating cart quantity:", error);
+      await fetchCartData();
     }
   };
 
   const handleRemoveItem = async (productId) => {
+    // 1. Optimistically remove item from UI immediately
+    const remaining = cartItems.filter(
+      (it) => it.productId !== productId && it.productInfo?.id !== productId
+    );
+    setCartItemsState(remaining);
+    dispatch(setCartItems(remaining));
+
+    const remainingTotal = remaining.reduce((acc, it) => {
+      const unit = Number(it.productInfo?.price) || Number(it.price) || 0;
+      const qty = Number(it.quantity) || 1;
+      return acc + unit * qty;
+    }, 0);
+    setTotalPriceState(remainingTotal);
+    dispatch(setTotalPrice(remainingTotal));
+
+    // 2. Call backend DELETE API
     try {
       await removeItemFromCart(userId, productId, token);
-      await fetchCartData();
     } catch (error) {
-      console.error("Error removing cart item:", error);
-      // Fallback: update quantity to 0 or refetch
+      console.error("Error removing cart item from backend:", error);
+    } finally {
+      // Re-sync with backend
       await fetchCartData();
     }
   };

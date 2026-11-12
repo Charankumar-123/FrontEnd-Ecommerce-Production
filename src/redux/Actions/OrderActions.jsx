@@ -7,29 +7,54 @@ const getAuthHeaders = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+// Safe response parser that never crashes on empty or text responses
+const parseResponseSafely = async (response) => {
+    const text = await response.text();
+    if (!text || text.trim() === "") return null;
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        console.warn("Server returned non-JSON response:", text);
+        return { message: text };
+    }
+};
+
 // Fetch orders thunk
 export const fetchOrders = createAsyncThunk(
     'orders/fetchOrders',
     async (userId, { rejectWithValue }) => {
+        if (!userId) {
+            return [];
+        }
+
         try {
             const response = await fetch(`http://localhost:8080/api/orders/get-orders/${userId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                    ...getAuthHeaders(), // Spread the auth headers
+                    ...getAuthHeaders(),
                 },
             });
 
-            const result = await response.json();
+            const result = await parseResponseSafely(response);
 
-            if (response.ok && result.status) {
-                return result.data; // Return the orders data if successful
+            if (response.ok) {
+                // If backend returns { status: true, data: [...] }
+                if (result && Array.isArray(result.data)) {
+                    return result.data;
+                }
+                // If backend returns array directly [...]
+                if (Array.isArray(result)) {
+                    return result;
+                }
+                // If data is empty list
+                return [];
             } else {
-                return rejectWithValue(result.message || "Failed to fetch orders"); // Handle failure with server message
+                return rejectWithValue(result?.message || `Failed to fetch orders (HTTP ${response.status})`);
             }
         } catch (error) {
             console.error("Error fetching orders:", error);
-            return rejectWithValue(error.message); // Return error message if failed
+            return rejectWithValue(error.message || "Failed to fetch orders");
         }
     }
 );
@@ -47,24 +72,24 @@ export const addOrder = createAsyncThunk(
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    ...getAuthHeaders(), // Spread the auth headers
+                    ...getAuthHeaders(),
                 },
                 body: JSON.stringify({
                     cartItems: orderData.cartItems,
-                    totalPrice: orderData.totalPrice, // Ensure totalPrice is sent
+                    totalPrice: orderData.totalPrice,
                 }),
             });
 
-            const result = await response.json();
+            const result = await parseResponseSafely(response);
 
-            if (response.ok && result.status) {
-                return result.data; // Return order data
+            if (response.ok && (result?.status || result?.orderId || result?.data)) {
+                return result.data || result;
             } else {
-                return rejectWithValue(result.message || "Failed to add order");
+                return rejectWithValue(result?.message || `Failed to create order (HTTP ${response.status})`);
             }
         } catch (error) {
             console.error("Error adding order:", error);
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.message || "Failed to add order");
         }
     }
 );

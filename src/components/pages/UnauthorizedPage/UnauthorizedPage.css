@@ -1,0 +1,110 @@
+.unauth-container {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 20px;
+  background: #f8fafc;
+}
+
+.unauth-card {
+  max-width: 520px;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 36px 30px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.unauth-icon-badge {
+  font-size: 48px;
+  width: 84px;
+  height: 84px;
+  line-height: 84px;
+  background: #fee2e2;
+  border-radius: 50%;
+  margin: 0 auto 20px auto;
+}
+
+.unauth-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #991b1b;
+  margin: 0 0 8px 0;
+}
+
+.unauth-subtitle {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.unauth-details-box {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #334155;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  margin-bottom: 26px;
+}
+
+.role-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+
+.role-tag.current {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.role-tag.required {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.unauth-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.unauth-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.unauth-btn.primary {
+  background: #004d40;
+  color: #ffffff;
+}
+
+.unauth-btn.primary:hover {
+  background: #00332c;
+}
+
+.unauth-btn.secondary {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.unauth-btn.secondary:hover {
+  background: #cbd5e1;
+}
+

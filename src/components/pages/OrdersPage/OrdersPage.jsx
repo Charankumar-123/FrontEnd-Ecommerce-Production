@@ -2,12 +2,35 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { fetchOrders } from "../../../redux/Actions/OrderActions.jsx";
-import { addToCart } from "../../../redux/CartSlice";
-import { addItemToCart } from "../../../Services/CartService";
+import { setCartItems } from "../../../redux/CartSlice";
+import { addItemToCart, getCartItems } from "../../../Services/CartService";
 import { getAuthToken, getStoredUser } from "../../../utils/cookieUtils";
+import {
+  subscribeToOrderTracking,
+  sendTrackingStatusUpdate,
+  fetchOrderTracking,
+} from "../../../Services/WebSocketService";
 import "./OrdersPage.css";
 
 const STATUS_STEPS = ["Ordered", "Shipped", "Out for Delivery", "Delivered"];
+
+const TRACKING_STEPS = [
+  { key: "ORDERED", label: "Order Confirmed & Verified", desc: "Payment received & order processed", icon: "✓" },
+  { key: "DISPATCHED", label: "Package Dispatched", desc: "Dispatched from ModernStore Central Hub", icon: "📦" },
+  { key: "IN_TRANSIT", label: "In Transit", desc: "Moving towards regional delivery hub", icon: "🚚" },
+  { key: "OUT_FOR_DELIVERY", label: "Out for Delivery", desc: "With courier delivery executive", icon: "🛵" },
+  { key: "DELIVERED", label: "Delivered", desc: "Successfully delivered to customer", icon: "🎉" },
+];
+
+const getTrackingStepIndex = (status) => {
+  if (!status) return 0;
+  const s = status.toUpperCase();
+  if (s.includes("DELIVER")) return 4;
+  if (s.includes("OUT")) return 3;
+  if (s.includes("TRANSIT") || s.includes("SHIP")) return 2;
+  if (s.includes("DISPATCH") || s.includes("PROCESS")) return 1;
+  return 0; // ORDERED / CONFIRMED
+};
 
 const getStepIndex = (status) => {
   if (!status) return 0;
@@ -35,7 +58,7 @@ const OrdersPage = () => {
         resolvedUserId = savedUser.userId || savedUser.userID;
         resolvedName = resolvedName || savedUser.userName || savedUser.name;
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const { orders = [], loading, error } = useSelector((state) => state.orders);
@@ -44,8 +67,78 @@ const OrdersPage = () => {
   const [selectedTrackOrder, setSelectedTrackOrder] = useState(null);
   const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState(null);
 
+  // Live WebSocket Tracking states
+  const [liveTracking, setLiveTracking] = useState(null);
+  const [wsStatus, setWsStatus] = useState("DISCONNECTED"); // 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED'
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // WebSocket Subscription Lifecycle for Track Package
   useEffect(() => {
-    if (resolvedUserId) {
+    if (!selectedTrackOrder) {
+      setLiveTracking(null);
+      setWsStatus("DISCONNECTED");
+      return;
+    }
+
+    const orderId = selectedTrackOrder.orderId;
+
+    // 1. Fetch initial tracking status via REST API
+    fetchOrderTracking(orderId).then((data) => {
+      if (data) {
+        setLiveTracking(data);
+      } else {
+        setLiveTracking({
+          orderId: orderId,
+          status: selectedTrackOrder.status || "ORDERED",
+          carrier: "ModernStore Express",
+          trackingNumber: `TRK-${(orderId * 89234).toString(16).toUpperCase()}`,
+        });
+      }
+    });
+
+    // 2. Subscribe to WebSocket Topic /topic/order-tracking/{orderId}
+    const client = subscribeToOrderTracking(
+      orderId,
+      (updatedPayload) => {
+        console.log("Real-time tracking payload via WebSocket:", updatedPayload);
+        setLiveTracking((prev) => ({
+          ...prev,
+          ...updatedPayload,
+        }));
+      },
+      (connectionStatus) => {
+        setWsStatus(connectionStatus);
+      }
+    );
+
+    // 3. Unsubscribe / deactivate on cleanup
+    return () => {
+      if (client) {
+        client.deactivate();
+      }
+    };
+  }, [selectedTrackOrder]);
+
+  const handleUpdateStatus = async (newStatus, location) => {
+    if (!selectedTrackOrder) return;
+    try {
+      setIsUpdatingStatus(true);
+      await sendTrackingStatusUpdate(
+        selectedTrackOrder.orderId,
+        newStatus,
+        liveTracking?.carrier || "ModernStore Express",
+        location
+      );
+    } catch (err) {
+      console.error("Status update error:", err);
+      alert("Failed to update status: " + err.message);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  useEffect(() => {
+    if (resolvedUserId && resolvedUserId !== "undefined" && resolvedUserId !== "null") {
       dispatch(fetchOrders(resolvedUserId));
     }
   }, [dispatch, resolvedUserId]);
@@ -60,7 +153,8 @@ const OrdersPage = () => {
 
     try {
       await addItemToCart(resolvedUserId, productId, 1, token);
-      dispatch(addToCart({ productId, quantity: 1 }));
+      const updatedCart = await getCartItems(resolvedUserId, token);
+      dispatch(setCartItems(updatedCart));
       alert(`Added "${item.productOrderInfo?.name || "Product"}" to your cart!`);
       navigate("/cart");
     } catch (err) {
@@ -224,9 +318,8 @@ const OrdersPage = () => {
                         {STATUS_STEPS.map((stepName, idx) => (
                           <div
                             key={stepName}
-                            className={`stepper-node ${idx <= currentStep ? "completed" : ""} ${
-                              idx === currentStep ? "current" : ""
-                            }`}
+                            className={`stepper-node ${idx <= currentStep ? "completed" : ""} ${idx === currentStep ? "current" : ""
+                              }`}
                           >
                             <div className="node-circle">
                               {idx <= currentStep ? "✓" : idx + 1}
@@ -319,12 +412,17 @@ const OrdersPage = () => {
         )}
       </div>
 
-      {/* TRACK PACKAGE MODAL */}
+      {/* TRACK PACKAGE MODAL (REAL-TIME WEBSOCKET ENABLED) */}
       {selectedTrackOrder && (
         <div className="tracking-modal-backdrop" onClick={() => setSelectedTrackOrder(null)}>
           <div className="tracking-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>📦 Package Tracking Details</h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <h3 style={{ margin: 0 }}>📦 Live Package Tracking</h3>
+                <span className={`ws-badge ${wsStatus.toLowerCase()}`}>
+                  {wsStatus === "CONNECTED" ? "🟢 Connected" : wsStatus === "CONNECTING" ? "🟡 Connecting..." : "⚪ Offline"}
+                </span>
+              </div>
               <button
                 className="modal-close-btn"
                 onClick={() => setSelectedTrackOrder(null)}
@@ -339,44 +437,87 @@ const OrdersPage = () => {
                   <strong>Order ID:</strong> ORD-{selectedTrackOrder.orderId}
                 </div>
                 <div>
-                  <strong>Carrier:</strong> ModernStore Express Delivery
+                  <strong>Carrier:</strong> {liveTracking?.carrier || "ModernStore Express Delivery"}
                 </div>
                 <div>
-                  <strong>Tracking ID:</strong> TRK-{(selectedTrackOrder.orderId * 89234).toString(16).toUpperCase()}
+                  <strong>Tracking ID:</strong> {liveTracking?.trackingNumber || `TRK-${(selectedTrackOrder.orderId * 89234).toString(16).toUpperCase()}`}
                 </div>
+                {liveTracking?.location && (
+                  <div>
+                    <strong>Latest Location:</strong> 📍 {liveTracking.location}
+                  </div>
+                )}
+                {liveTracking?.updatedAt && (
+                  <div>
+                    <strong>Last Updated:</strong> {new Date(liveTracking.updatedAt).toLocaleTimeString()}
+                  </div>
+                )}
               </div>
 
+              {/* DYNAMIC REAL-TIME TIMELINE */}
               <div className="tracking-timeline">
-                <div className="timeline-event done">
-                  <div className="timeline-dot">✓</div>
-                  <div className="timeline-text">
-                    <strong>Order Confirmed & Payment Verified</strong>
-                    <small>Payment received via Razorpay</small>
-                  </div>
-                </div>
+                {TRACKING_STEPS.map((step, idx) => {
+                  const currentIdx = getTrackingStepIndex(liveTracking?.status || selectedTrackOrder.status);
+                  const isDone = idx < currentIdx;
+                  const isActive = idx === currentIdx;
 
-                <div className="timeline-event done">
-                  <div className="timeline-dot">✓</div>
-                  <div className="timeline-text">
-                    <strong>Package Dispatched from Fulfillment Center</strong>
-                    <small>ModernStore Central Hub, Bangalore</small>
-                  </div>
-                </div>
+                  return (
+                    <div
+                      key={step.key}
+                      className={`timeline-event ${isDone ? "done" : ""} ${isActive ? "active" : ""}`}
+                    >
+                      <div className="timeline-dot">
+                        {isDone ? "✓" : isActive ? step.icon : "○"}
+                      </div>
+                      <div className="timeline-text">
+                        <strong>
+                          {step.label}
+                          {isActive && <span className="live-pulse-badge">LIVE</span>}
+                        </strong>
+                        <small>{step.desc}</small>
+                        {isActive && liveTracking?.location && (
+                          <small className="location-tag">📍 {liveTracking.location}</small>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-                <div className="timeline-event active">
-                  <div className="timeline-dot">🚚</div>
-                  <div className="timeline-text">
-                    <strong>In Transit to Local Delivery Station</strong>
-                    <small>Estimated arrival: Tomorrow, 8:00 PM</small>
-                  </div>
+              {/* SIMULATION & ROLE ACTION CONTROLS */}
+              <div className="tracking-roles-control">
+                <div className="role-control-header">
+                  <span>🛠️ Real-Time Logistics Role Actions (Simulate Live Push):</span>
                 </div>
-
-                <div className="timeline-event">
-                  <div className="timeline-dot">○</div>
-                  <div className="timeline-text">
-                    <strong>Out for Delivery</strong>
-                    <small>With local courier courier executive</small>
-                  </div>
+                <div className="role-buttons-grid">
+                  <button
+                    disabled={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus("DISPATCHED", "Seller Fulfillment Hub, Bangalore")}
+                    className="role-action-btn"
+                  >
+                    🏪 Seller: Dispatch
+                  </button>
+                  <button
+                    disabled={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus("IN_TRANSIT", "Regional Logistics Sorting Center")}
+                    className="role-action-btn"
+                  >
+                    🏭 Warehouse: In-Transit
+                  </button>
+                  <button
+                    disabled={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus("OUT_FOR_DELIVERY", "Local Courier Delivery Partner")}
+                    className="role-action-btn"
+                  >
+                    🛵 Courier: Out for Delivery
+                  </button>
+                  <button
+                    disabled={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus("DELIVERED", "Delivered at Doorstep")}
+                    className="role-action-btn"
+                  >
+                    🎉 Mark Delivered
+                  </button>
                 </div>
               </div>
 

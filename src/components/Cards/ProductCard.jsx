@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./ProductCard.css";
-import { addToCart } from "../../redux/CartSlice";
 import { addItemToCart, getCartItems } from "../../Services/CartService";
 import { setCartItems } from "../../redux/CartSlice";
+import { getAuthToken } from "../../utils/cookieUtils";
 
 const HERO_SLIDES = [
   {
@@ -127,7 +127,7 @@ const ProductCard = () => {
   const userId = useSelector(
     (state) => state.auth.userDetail?.userId || state.auth.userDetail?.userID
   );
-  const token = useSelector((state) => state.auth.token) || localStorage.getItem("authToken");
+  const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
 
   // Sync category from URL param if changed from navigation
@@ -191,12 +191,11 @@ const ProductCard = () => {
 
     try {
       const quantity = quantities[product.id] || 1;
-      const result = await addItemToCart(userId, product.id, quantity);
+      const result = await addItemToCart(userId, product.id, quantity, token);
 
       if (result) {
-        const updatedCart = await getCartItems(userId);
+        const updatedCart = await getCartItems(userId, token);
         dispatch(setCartItems(updatedCart));
-        dispatch(addToCart({ productId: product.id, quantity }));
       }
     } catch (error) {
       console.error("Error in handleAddToCart:", error);
@@ -461,10 +460,10 @@ const ProductCard = () => {
               discountFilter > 0 ||
               inStockOnly ||
               searchQuery) && (
-              <button className="clear-filters-link" onClick={handleClearAllFilters}>
-                Clear All
-              </button>
-            )}
+                <button className="clear-filters-link" onClick={handleClearAllFilters}>
+                  Clear All
+                </button>
+              )}
           </div>
 
           {/* Department / Category Filter */}

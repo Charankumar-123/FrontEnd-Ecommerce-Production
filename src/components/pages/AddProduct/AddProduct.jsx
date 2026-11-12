@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { getAuthToken, getStoredUser } from "../../../utils/cookieUtils";
 import "./Addproduct.css";
 
 const PRESET_IMAGES = [
@@ -38,17 +39,13 @@ const CATEGORIES = [
 
 const AddProduct = () => {
   const navigate = useNavigate();
-  const token = useSelector((state) => state.auth.token) || localStorage.getItem("authToken");
-  const userDetail = useSelector((state) => state.auth.userDetail);
+  const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
+  const userDetail = useSelector((state) => state.auth.userDetail) || getStoredUser();
 
-  let savedRole = userDetail?.role;
-  if (!savedRole) {
-    try {
-      const savedUser = JSON.parse(localStorage.getItem("user"));
-      savedRole = savedUser?.role;
-    } catch (e) {}
-  }
-  const isAdmin = savedRole?.trim().toLowerCase() === "admin";
+  const role = (userDetail?.role || "CUSTOMER").toString().trim().toUpperCase();
+  const isAdmin = role === "ADMIN";
+  const isSeller = role === "SELLER" || isAdmin;
+  const currentSellerId = userDetail?.userID || userDetail?.id;
 
   const [product, setProduct] = useState({
     name: "",
@@ -84,13 +81,16 @@ const AddProduct = () => {
 
       const payload = {
         name: product.name,
+        category: product.category || "Electronics",
         description: product.description,
         price: parseFloat(product.price),
         image: product.image,
         quantity: parseInt(product.quantity) || 1,
+        sellerId: currentSellerId || null,
       };
 
-      const response = await fetch("http://localhost:8080/products/addproducts", {
+      // Try seller-specific endpoint first, fallback to legacy addproducts
+      let response = await fetch("http://localhost:8080/api/seller/products", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -98,6 +98,17 @@ const AddProduct = () => {
         },
         body: JSON.stringify(payload),
       });
+
+      if (!response.ok) {
+        response = await fetch("http://localhost:8080/products/addproducts", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
       if (!response.ok) {
         throw new Error("Failed to add product");
@@ -118,7 +129,7 @@ const AddProduct = () => {
       }, 5000);
     } catch (error) {
       console.error("Error adding product:", error);
-      alert("Error adding product. Please make sure you are logged in as admin.");
+      alert("Error adding product: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -144,10 +155,10 @@ const AddProduct = () => {
           </button>
         </div>
 
-        {/* Non-Admin Warning if applicable */}
-        {!isAdmin && (
+        {/* Non-Seller Warning if applicable */}
+        {!isSeller && (
           <div className="admin-warning-banner">
-            ⚠️ <strong>Admin Permission Notice:</strong> You are currently logged in as a normal user. Only accounts with the <strong>Admin</strong> role have privileges to publish products.
+            ⚠️ <strong>Seller Permission Notice:</strong> You are currently logged in as a Customer. Only accounts with the <strong>Seller</strong> or <strong>Admin</strong> role have privileges to publish products.
           </div>
         )}
 

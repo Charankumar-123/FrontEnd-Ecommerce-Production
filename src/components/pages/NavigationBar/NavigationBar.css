@@ -113,6 +113,42 @@
   color: #212529;
 }
 
+.sub-nav-item.seller-portal-tag {
+  background: rgba(255, 152, 0, 0.2);
+  color: #ffb74d;
+  border: 1px solid rgba(255, 152, 0, 0.4);
+  font-weight: 700;
+}
+
+.sub-nav-item.seller-portal-tag:hover {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.sub-nav-item.inventory-portal-tag {
+  background: rgba(126, 87, 194, 0.2);
+  color: #b39ddb;
+  border: 1px solid rgba(126, 87, 194, 0.4);
+  font-weight: 700;
+}
+
+.sub-nav-item.inventory-portal-tag:hover {
+  background: #7e57c2;
+  color: #ffffff;
+}
+
+.sub-nav-item.warehouse-portal-tag {
+  background: rgba(41, 182, 246, 0.2);
+  color: #81d4fa;
+  border: 1px solid rgba(41, 182, 246, 0.4);
+  font-weight: 700;
+}
+
+.sub-nav-item.warehouse-portal-tag:hover {
+  background: #29b6f6;
+  color: #0d47a1;
+}
+
 /* Brand Link */
 .navbar-brand-link {
   display: flex;
@@ -228,6 +264,54 @@
   color: #1a1a1a;
 }
 
+.seller-highlight-link {
+  background: rgba(255, 152, 0, 0.15);
+  color: #ffb74d;
+  border: 1px solid rgba(255, 152, 0, 0.4);
+  font-weight: 600;
+}
+
+.seller-highlight-link:hover {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.inventory-highlight-link {
+  background: rgba(126, 87, 194, 0.15);
+  color: #b39ddb;
+  border: 1px solid rgba(126, 87, 194, 0.4);
+  font-weight: 600;
+}
+
+.inventory-highlight-link:hover {
+  background: #7e57c2;
+  color: #ffffff;
+}
+
+.warehouse-highlight-link {
+  background: rgba(41, 182, 246, 0.15);
+  color: #81d4fa;
+  border: 1px solid rgba(41, 182, 246, 0.4);
+  font-weight: 600;
+}
+
+.warehouse-highlight-link:hover {
+  background: #29b6f6;
+  color: #0d47a1;
+}
+
+.admin-console-link {
+  background: rgba(255, 215, 0, 0.2);
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  font-weight: 700;
+}
+
+.admin-console-link:hover {
+  background: #ffd700;
+  color: #121212;
+}
+
 /* Right Actions */
 .navbar-right-actions {
   display: flex;
@@ -322,6 +406,23 @@
   color: #212529;
 }
 
+.navbar-role-tag.seller {
+  background: #ff9800;
+  color: #ffffff;
+}
+
+.navbar-role-tag.inventory {
+  background: #7e57c2;
+  color: #ffffff;
+}
+
+.navbar-role-tag.warehouse {
+  background: #29b6f6;
+  color: #0d47a1;
+  font-weight: 800;
+}
+
+.navbar-role-tag.customer,
 .navbar-role-tag.user {
   background: #26a69a;
   color: #ffffff;

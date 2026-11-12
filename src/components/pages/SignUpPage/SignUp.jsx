@@ -12,7 +12,7 @@ const Signup = () => {
     email: "",
     mobile: "",
     password: "",
-    role: "user",
+    role: "CUSTOMER",
   });
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const Signup = () => {
       email: "",
       mobile: "",
       password: "",
-      role: "user",
+      role: "CUSTOMER",
     });
   }, []);
 
@@ -52,7 +52,7 @@ const Signup = () => {
 
       const response = await signup(payload);
       if (response && response.status) {
-        alert(`Account created successfully as ${userData.role === "admin" ? "Admin" : "Customer"}! Redirecting to login...`);
+        alert(`Account created successfully as ${userData.role}! Redirecting to login...`);
         navigate("/login");
       } else {
         alert(response?.message || "Signup failed. Please try again.");
@@ -143,34 +143,67 @@ const Signup = () => {
 
           {/* Prominent Role Selector */}
           <div className="role-selector-wrapper">
-            <label className="role-selector-label">Account Role</label>
+            <label className="role-selector-label">Select Account Role</label>
             <div className="role-cards-container">
               <div
-                className={`role-option-card ${userData.role === "user" ? "selected" : ""}`}
-                onClick={() => handleRoleSelect("user")}
+                className={`role-option-card ${userData.role === "CUSTOMER" ? "selected" : ""}`}
+                onClick={() => handleRoleSelect("CUSTOMER")}
               >
                 <div className="role-card-header">
                   <span className="role-icon">👤</span>
                   <span className="role-name">Customer</span>
                 </div>
-                <small className="role-description">Browse products, cart & track orders</small>
+                <small className="role-description">Browse, cart & track packages</small>
               </div>
 
               <div
-                className={`role-option-card ${userData.role === "admin" ? "selected" : ""}`}
-                onClick={() => handleRoleSelect("admin")}
+                className={`role-option-card ${userData.role === "SELLER" ? "selected" : ""}`}
+                onClick={() => handleRoleSelect("SELLER")}
               >
                 <div className="role-card-header">
-                  <span className="role-icon">🛡️</span>
-                  <span className="role-name">Admin / Seller</span>
+                  <span className="role-icon">🏪</span>
+                  <span className="role-name">Seller</span>
                 </div>
-                <small className="role-description">Manage inventory & add new products</small>
+                <small className="role-description">List products & manage catalog</small>
+              </div>
+
+              <div
+                className={`role-option-card ${userData.role === "INVENTORY" ? "selected" : ""}`}
+                onClick={() => handleRoleSelect("INVENTORY")}
+              >
+                <div className="role-card-header">
+                  <span className="role-icon">📊</span>
+                  <span className="role-name">Inventory</span>
+                </div>
+                <small className="role-description">Stock levels & SKU audits</small>
+              </div>
+
+              <div
+                className={`role-option-card ${userData.role === "WAREHOUSE" ? "selected" : ""}`}
+                onClick={() => handleRoleSelect("WAREHOUSE")}
+              >
+                <div className="role-card-header">
+                  <span className="role-icon">🏭</span>
+                  <span className="role-name">Warehouse</span>
+                </div>
+                <small className="role-description">Pick, pack & dispatch queue</small>
+              </div>
+
+              <div
+                className={`role-option-card ${userData.role === "ADMIN" ? "selected" : ""}`}
+                onClick={() => handleRoleSelect("ADMIN")}
+              >
+                <div className="role-card-header">
+                  <span className="role-icon">👑</span>
+                  <span className="role-name">Admin</span>
+                </div>
+                <small className="role-description">Full governance & supervision</small>
               </div>
             </div>
           </div>
 
           <button type="submit" className="signup-button">
-            Create {userData.role === "admin" ? "Admin" : "Customer"} Account
+            Create {userData.role} Account
           </button>
 
           <p className="login-text">

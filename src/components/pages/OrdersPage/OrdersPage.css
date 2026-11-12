@@ -724,3 +724,101 @@
     text-align: left;
   }
 }
+
+/* Real-time WebSocket Badges & Role Controls */
+.ws-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.ws-badge.connected {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+.ws-badge.connecting {
+  background: #f59e0b;
+  color: #ffffff;
+}
+.ws-badge.disconnected, .ws-badge.error {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.live-pulse-badge {
+  display: inline-block;
+  background: #10b981;
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.location-tag {
+  display: block;
+  color: #00796b !important;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.tracking-roles-control {
+  background: #f0fdf4;
+  border: 1px dashed #86efac;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+
+.role-control-header {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #166534;
+  margin-bottom: 8px;
+}
+
+.role-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.role-action-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.role-action-btn:hover:not(:disabled) {
+  background: #004d40;
+  color: #ffffff;
+  border-color: #004d40;
+  transform: translateY(-1px);
+}
+
+.role-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

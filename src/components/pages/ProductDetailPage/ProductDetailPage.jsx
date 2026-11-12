@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { addToCart } from "../../../redux/CartSlice";
 import { addItemToCart, getCartItems } from "../../../Services/CartService";
 import { setCartItems } from "../../../redux/CartSlice";
+import { getAuthToken } from "../../../utils/cookieUtils";
 import "./ProductDetailPage.css";
 
 const ProductDetailPage = () => {
@@ -19,7 +19,7 @@ const ProductDetailPage = () => {
   const userId = useSelector(
     (state) => state.auth.userDetail?.userId || state.auth.userDetail?.userID
   );
-  const token = useSelector((state) => state.auth.token) || localStorage.getItem("authToken");
+  const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
 
   useEffect(() => {
@@ -56,11 +56,10 @@ const ProductDetailPage = () => {
     }
 
     try {
-      const result = await addItemToCart(userId, product.id, quantity);
+      const result = await addItemToCart(userId, product.id, quantity, token);
       if (result) {
-        const updatedCart = await getCartItems(userId);
+        const updatedCart = await getCartItems(userId, token);
         dispatch(setCartItems(updatedCart));
-        dispatch(addToCart({ productId: product.id, quantity }));
         setIsAdded(true);
       }
     } catch (err) {

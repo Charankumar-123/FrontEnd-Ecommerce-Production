@@ -7,6 +7,24 @@ import { setCartItems } from "../../../redux/CartSlice";
 import { getAuthHeaders } from "../../../Services/UserService";
 import { setAuthToken } from "../../../utils/cookieUtils";
 
+const getRoleHomePath = (roleStr) => {
+  const clean = (roleStr || "CUSTOMER").toUpperCase();
+  switch (clean) {
+    case "SELLER":
+      return "/seller/dashboard";
+    case "INVENTORY":
+      return "/inventory/dashboard";
+    case "WAREHOUSE":
+      return "/warehouse/dashboard";
+    case "ADMIN":
+      return "/admin/dashboard";
+    case "CUSTOMER":
+    case "USER":
+    default:
+      return "/";
+  }
+};
+
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -77,8 +95,9 @@ const Login = () => {
       // Fetch user cart
       await fetchCartData(userID, token);
 
-      alert("Login successful!");
-      navigate("/");
+      alert(`Login successful as ${role.toUpperCase()}!`);
+      const targetPath = getRoleHomePath(role);
+      navigate(targetPath);
     } catch (error) {
       console.error("Login error:", error);
       alert("Login error. Please try again.");
@@ -124,7 +143,7 @@ const Login = () => {
           );
 
           await fetchCartData(userData.userId, token);
-          navigate("/");
+          navigate(getRoleHomePath(userData.role));
         } catch (error) {
           console.error("Error fetching user info:", error);
         }

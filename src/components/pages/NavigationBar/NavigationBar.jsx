@@ -29,7 +29,11 @@ const NavigationBar = () => {
     } catch (e) {}
   }
 
-  const isAdmin = savedRole?.trim().toLowerCase() === "admin";
+  const role = (savedRole || "CUSTOMER").toString().trim().toUpperCase();
+  const isAdmin = role === "ADMIN";
+  const isSeller = role === "SELLER";
+  const isInventory = role === "INVENTORY";
+  const isWarehouse = role === "WAREHOUSE";
   const loggedIn = Boolean(isLogin || token);
   const displayName = savedName || "User";
 
@@ -91,14 +95,51 @@ const NavigationBar = () => {
           <Link className="nav-item-link" to="/">
             Store
           </Link>
-          {!isAdmin && (
-            <Link className="nav-item-link" to="/contactus">
-              Contact
+
+          {/* Customer / Universal Orders Link */}
+          {loggedIn && (
+            <Link className="nav-item-link" to="/orders">
+              Orders
             </Link>
           )}
-          {isAdmin && (
+
+          {/* Seller / Admin links */}
+          {(isSeller || isAdmin) && (
+            <Link className="nav-item-link seller-highlight-link" to="/seller/dashboard">
+              🏪 Seller Hub
+            </Link>
+          )}
+
+          {(isSeller || isAdmin) && (
             <Link className="nav-item-link admin-highlight-link" to="/addproduct">
-              ➕ Add Products
+              ➕ Add Product
+            </Link>
+          )}
+
+          {/* Inventory / Admin links */}
+          {(isInventory || isAdmin) && (
+            <Link className="nav-item-link inventory-highlight-link" to="/inventory/dashboard">
+              📦 Inventory Hub
+            </Link>
+          )}
+
+          {/* Warehouse / Admin links */}
+          {(isWarehouse || isAdmin) && (
+            <Link className="nav-item-link warehouse-highlight-link" to="/warehouse/dashboard">
+              🏭 Warehouse Hub
+            </Link>
+          )}
+
+          {/* Master Admin Console link */}
+          {isAdmin && (
+            <Link className="nav-item-link admin-console-link" to="/admin/dashboard">
+              👑 Admin Console
+            </Link>
+          )}
+
+          {!isAdmin && !isSeller && !isInventory && !isWarehouse && (
+            <Link className="nav-item-link" to="/contactus">
+              Contact
             </Link>
           )}
         </nav>
@@ -122,8 +163,8 @@ const NavigationBar = () => {
                 <span className="user-greeting">
                   Hi, <strong>{displayName}</strong>
                 </span>
-                <span className={`navbar-role-tag ${isAdmin ? "admin" : "user"}`}>
-                  {isAdmin ? "Admin" : "Customer"}
+                <span className={`navbar-role-tag ${role.toLowerCase()}`}>
+                  {role}
                 </span>
               </Link>
               <button onClick={handleLogout} className="navbar-logout-btn">
@@ -156,6 +197,72 @@ const NavigationBar = () => {
           </button>
 
           <div className="sub-nav-links-track">
+            {/* Role-specific quick action pills */}
+            {isAdmin && (
+              <>
+                <span
+                  className="sub-nav-item admin-portal-tag"
+                  onClick={() => navigate("/admin/dashboard")}
+                >
+                  👑 Admin Console
+                </span>
+                <span
+                  className="sub-nav-item seller-portal-tag"
+                  onClick={() => navigate("/seller/dashboard")}
+                >
+                  🏪 Seller Central
+                </span>
+                <span
+                  className="sub-nav-item inventory-portal-tag"
+                  onClick={() => navigate("/inventory/dashboard")}
+                >
+                  📦 Inventory Control
+                </span>
+                <span
+                  className="sub-nav-item warehouse-portal-tag"
+                  onClick={() => navigate("/warehouse/dashboard")}
+                >
+                  🏭 Warehouse Portal
+                </span>
+              </>
+            )}
+
+            {isSeller && !isAdmin && (
+              <>
+                <span
+                  className="sub-nav-item seller-portal-tag"
+                  onClick={() => navigate("/seller/dashboard")}
+                >
+                  🏪 Seller Dashboard
+                </span>
+                <span
+                  className="sub-nav-item"
+                  onClick={() => navigate("/addproduct")}
+                >
+                  ➕ Add Listing
+                </span>
+              </>
+            )}
+
+            {isInventory && !isAdmin && (
+              <span
+                className="sub-nav-item inventory-portal-tag"
+                onClick={() => navigate("/inventory/dashboard")}
+              >
+                📦 Inventory Console
+              </span>
+            )}
+
+            {isWarehouse && !isAdmin && (
+              <span
+                className="sub-nav-item warehouse-portal-tag"
+                onClick={() => navigate("/warehouse/dashboard")}
+              >
+                🏭 Warehouse Dispatch
+              </span>
+            )}
+
+            {/* Standard Category / Store Navigation */}
             <span
               className="sub-nav-item deals-tag"
               onClick={() => navigate("/?filter=deals")}
@@ -192,14 +299,6 @@ const NavigationBar = () => {
             >
               Customer Service
             </span>
-            {isAdmin && (
-              <span
-                className="sub-nav-item admin-portal-tag"
-                onClick={() => navigate("/addproduct")}
-              >
-                🛡️ Seller Central
-              </span>
-            )}
           </div>
         </div>
       </div>
