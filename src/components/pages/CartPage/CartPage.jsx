@@ -10,7 +10,7 @@ import {
   updateCartQuantity,
   removeItemFromCart,
 } from "../../../Services/CartService";
-import { getAuthToken } from "../../../utils/cookieUtils";
+import { getAuthToken, getStoredUser } from "../../../utils/cookieUtils";
 import "./CartPage.css";
 
 const CartPage = () => {
@@ -21,9 +21,18 @@ const CartPage = () => {
   const [totalPrice, setTotalPriceState] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const userId = useSelector(
+  const reduxUserId = useSelector(
     (state) => state.auth.userDetail?.userId || state.auth.userDetail?.userID
   );
+  let userId = reduxUserId;
+  if (!userId) {
+    try {
+      const savedUser = getStoredUser() || JSON.parse(localStorage.getItem("user"));
+      if (savedUser) {
+        userId = savedUser.userId || savedUser.userID || savedUser.id;
+      }
+    } catch (e) {}
+  }
   const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
 
   const fetchCartData = async () => {

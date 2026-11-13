@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import "./ProductCard.css";
 import { addItemToCart, getCartItems } from "../../Services/CartService";
 import { setCartItems } from "../../redux/CartSlice";
-import { getAuthToken } from "../../utils/cookieUtils";
+import { getAuthToken, getStoredUser } from "../../utils/cookieUtils";
 
 const HERO_SLIDES = [
   {
@@ -124,9 +124,18 @@ const ProductCard = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
 
-  const userId = useSelector(
+  const reduxUserId = useSelector(
     (state) => state.auth.userDetail?.userId || state.auth.userDetail?.userID
   );
+  let userId = reduxUserId;
+  if (!userId) {
+    try {
+      const savedUser = getStoredUser() || JSON.parse(localStorage.getItem("user"));
+      if (savedUser) {
+        userId = savedUser.userId || savedUser.userID || savedUser.id;
+      }
+    } catch (e) {}
+  }
   const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
 
@@ -190,8 +199,13 @@ const ProductCard = () => {
     }
 
     try {
-      const quantity = quantities[product.id] || 1;
-      const result = await addItemToCart(userId, product.id, quantity, token);
+      const pId = product?.id || product?.productId;
+      if (!pId) {
+        console.error("Product ID missing", product);
+        return;
+      }
+      const quantity = quantities[pId] || quantities[product.id] || 1;
+      const result = await addItemToCart(userId, pId, quantity, token);
 
       if (result) {
         const updatedCart = await getCartItems(userId, token);
@@ -203,7 +217,7 @@ const ProductCard = () => {
   };
 
   const isAddedToCart = (productId) => {
-    return cartItems.some((item) => item.productInfo?.id === productId);
+    return cartItems.some((item) => (item.productInfo?.id || item.productInfo?.productId || item.productId) === productId);
   };
 
   const handleCardClick = (productId) => {

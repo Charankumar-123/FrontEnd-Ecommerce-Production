@@ -35,20 +35,24 @@ const Login = () => {
     email: "",
     password: "",
   });
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [searchParams] = useSearchParams();
 
-  // Explicitly reset credentials on component mount to clear any browser autofill
+  // Reset credentials on mount
   useEffect(() => {
     setCredentials({ email: "", password: "" });
+    setErrorMessage("");
   }, []);
 
-  // Handle input change
+  // Handle dynamic input changes
   const handleChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
+    if (errorMessage) setErrorMessage("");
   };
 
-  // Fetch cart items after login
+  // Fetch cart items dynamically for the logged-in user
   const fetchCartData = async (userId, token) => {
     try {
       if (!userId || !token) return;
@@ -67,44 +71,57 @@ const Login = () => {
     }
   };
 
-  // Handle email/password login
+  // Dynamic login submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
+    setIsLoading(true);
+
     try {
       const response = await fetch("http://localhost:8080/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({
+          email: credentials.email.trim(),
+          password: credentials.password,
+        }),
       });
 
-      if (!response.ok) {
-        alert("Invalid email or password");
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data?.status) {
+        const errorMsg =
+          data?.message ||
+          "Invalid email or password. Please verify your credentials or register a new account.";
+        setErrorMessage(errorMsg);
+        setIsLoading(false);
         return;
       }
 
-      const data = await response.json();
       const { userID, userName, email, mobile, role, token } = data.data;
 
-      // Store JWT token in cookie
+      // Store JWT token dynamically in cookie & localStorage
       setAuthToken(token);
       localStorage.setItem("authToken", token);
 
-      // Dispatch Redux action
+      // Dispatch dynamic Redux user session
       dispatch(loginR({ email, userName, userID, mobile, role, token }));
 
-      // Fetch user cart
+      // Fetch dynamic user cart
       await fetchCartData(userID, token);
 
-      alert(`Login successful as ${role.toUpperCase()}!`);
+      // Dynamically redirect user to their authorized dashboard based on their database role
       const targetPath = getRoleHomePath(role);
       navigate(targetPath);
     } catch (error) {
       console.error("Login error:", error);
-      alert("Login error. Please try again.");
+      setErrorMessage("Could not connect to backend server at http://localhost:8080. Please ensure it is running.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Redirect to Google OAuth2 login
+  // Dynamic Google OAuth2 login
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
@@ -116,7 +133,6 @@ const Login = () => {
       setAuthToken(token);
       localStorage.setItem("authToken", token);
 
-      // Fetch user info from backend
       const fetchUserInfo = async () => {
         try {
           const response = await fetch("http://localhost:8080/users/me", {
@@ -130,7 +146,6 @@ const Login = () => {
 
           const userData = await response.json();
 
-          // Dispatch login with full user info
           dispatch(
             loginR({
               token,
@@ -153,7 +168,7 @@ const Login = () => {
     }
   }, [searchParams, dispatch, navigate]);
 
-  // Redirect logged-in users automatically to home
+  // Redirect already logged-in users
   useEffect(() => {
     if (isLogin) navigate("/");
   }, [isLogin, navigate]);
@@ -167,12 +182,23 @@ const Login = () => {
         </div>
 
         <form className="login-form" onSubmit={handleSubmit} autoComplete="off">
-          {/* Decoy inputs to trap aggressive browser autofill */}
+          {/* Decoy inputs to prevent unwanted browser autofill */}
           <input type="text" style={{ display: "none" }} tabIndex={-1} autoComplete="off" />
           <input type="password" style={{ display: "none" }} tabIndex={-1} autoComplete="new-password" />
 
           <h2 className="login-title">Sign In</h2>
-          <p className="login-subtitle">Welcome back! Access your orders and cart</p>
+          <p className="login-subtitle">Enter your registered email and password to access your account</p>
+
+          {/* Dynamic Error Message Banner */}
+          {errorMessage && (
+            <div className="login-error-banner">
+              <span className="error-icon">⚠️</span>
+              <div className="error-content">
+                <strong>Authentication Failed</strong>
+                <p>{errorMessage}</p>
+              </div>
+            </div>
+          )}
 
           <div className="input-group">
             <label className="input-label">Email Address</label>
@@ -212,8 +238,8 @@ const Login = () => {
             </div>
           </div>
 
-          <button type="submit" className="login-button">
-            Sign In
+          <button type="submit" className="login-button" disabled={isLoading}>
+            {isLoading ? "Signing In..." : "Sign In"}
           </button>
 
           <div className="auth-divider">

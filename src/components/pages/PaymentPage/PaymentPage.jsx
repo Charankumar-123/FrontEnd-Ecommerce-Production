@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addOrder } from "../../../redux/Actions/OrderActions";
 import { clearCart } from "../../../redux/CartSlice";
+import { getStoredUser } from "../../../utils/cookieUtils";
 import "./PaymentPage.css";
 
 const POPULAR_BANKS = [
@@ -24,9 +25,18 @@ const PaymentPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const userId = useSelector(
+  const reduxUserId = useSelector(
     (state) => state.auth.userDetail?.userId || state.auth.userDetail?.userID
   );
+  let userId = reduxUserId;
+  if (!userId) {
+    try {
+      const savedUser = getStoredUser() || JSON.parse(localStorage.getItem("user"));
+      if (savedUser) {
+        userId = savedUser.userId || savedUser.userID || savedUser.id;
+      }
+    } catch (e) {}
+  }
   const cartItems = useSelector((state) => state.cart.cartItems || []);
   const reduxTotal = useSelector((state) => state.cart.total);
 

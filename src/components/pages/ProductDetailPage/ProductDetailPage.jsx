@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { addItemToCart, getCartItems } from "../../../Services/CartService";
 import { setCartItems } from "../../../redux/CartSlice";
-import { getAuthToken } from "../../../utils/cookieUtils";
+import { getAuthToken, getStoredUser } from "../../../utils/cookieUtils";
 import "./ProductDetailPage.css";
 
 const ProductDetailPage = () => {
@@ -16,9 +16,18 @@ const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
 
-  const userId = useSelector(
+  const reduxUserId = useSelector(
     (state) => state.auth.userDetail?.userId || state.auth.userDetail?.userID
   );
+  let userId = reduxUserId;
+  if (!userId) {
+    try {
+      const savedUser = getStoredUser() || JSON.parse(localStorage.getItem("user"));
+      if (savedUser) {
+        userId = savedUser.userId || savedUser.userID || savedUser.id;
+      }
+    } catch (e) {}
+  }
   const token = useSelector((state) => state.auth.token) || getAuthToken() || localStorage.getItem("authToken");
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
 
@@ -32,7 +41,7 @@ const ProductDetailPage = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        const found = (data || []).find((p) => String(p.id) === String(id));
+        const found = (data || []).find((p) => String(p.id || p.productId) === String(id));
         setProduct(found || null);
         setLoading(false);
       })
@@ -56,7 +65,12 @@ const ProductDetailPage = () => {
     }
 
     try {
-      const result = await addItemToCart(userId, product.id, quantity, token);
+      const pId = product?.id || product?.productId;
+      if (!pId) {
+        console.error("Product ID missing", product);
+        return;
+      }
+      const result = await addItemToCart(userId, pId, quantity, token);
       if (result) {
         const updatedCart = await getCartItems(userId, token);
         dispatch(setCartItems(updatedCart));
@@ -73,8 +87,20 @@ const ProductDetailPage = () => {
       navigate("/login");
       return;
     }
-    await handleAddToCart();
-    navigate("/payment");
+    const pId = product?.id || product?.productId;
+    if (!pId) {
+      console.error("Product ID missing for buy now", product);
+      return;
+    }
+    try {
+      await addItemToCart(userId, pId, quantity, token);
+      const updatedCart = await getCartItems(userId, token);
+      dispatch(setCartItems(updatedCart));
+      navigate("/payment");
+    } catch (err) {
+      console.error("Buy now error:", err);
+      navigate("/payment");
+    }
   };
 
   if (loading) {

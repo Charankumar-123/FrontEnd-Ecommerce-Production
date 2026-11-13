@@ -7,7 +7,6 @@ import { addItemToCart, getCartItems } from "../../../Services/CartService";
 import { getAuthToken, getStoredUser } from "../../../utils/cookieUtils";
 import {
   subscribeToOrderTracking,
-  sendTrackingStatusUpdate,
   fetchOrderTracking,
 } from "../../../Services/WebSocketService";
 import "./OrdersPage.css";
@@ -70,7 +69,6 @@ const OrdersPage = () => {
   // Live WebSocket Tracking states
   const [liveTracking, setLiveTracking] = useState(null);
   const [wsStatus, setWsStatus] = useState("DISCONNECTED"); // 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED'
-  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // WebSocket Subscription Lifecycle for Track Package
   useEffect(() => {
@@ -118,24 +116,6 @@ const OrdersPage = () => {
       }
     };
   }, [selectedTrackOrder]);
-
-  const handleUpdateStatus = async (newStatus, location) => {
-    if (!selectedTrackOrder) return;
-    try {
-      setIsUpdatingStatus(true);
-      await sendTrackingStatusUpdate(
-        selectedTrackOrder.orderId,
-        newStatus,
-        liveTracking?.carrier || "ModernStore Express",
-        location
-      );
-    } catch (err) {
-      console.error("Status update error:", err);
-      alert("Failed to update status: " + err.message);
-    } finally {
-      setIsUpdatingStatus(false);
-    }
-  };
 
   useEffect(() => {
     if (resolvedUserId && resolvedUserId !== "undefined" && resolvedUserId !== "null") {
@@ -484,41 +464,38 @@ const OrdersPage = () => {
                 })}
               </div>
 
-              {/* SIMULATION & ROLE ACTION CONTROLS */}
-              <div className="tracking-roles-control">
-                <div className="role-control-header">
-                  <span>🛠️ Real-Time Logistics Role Actions (Simulate Live Push):</span>
+              {/* LIVE WEBSOCKET MONITORING STATUS (STRICTLY READ-ONLY FOR CUSTOMERS) */}
+              <div style={{
+                background: "#f0fdf4",
+                border: "1px solid #bbf7d0",
+                borderRadius: "10px",
+                padding: "14px 18px",
+                marginBottom: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{
+                    display: "inline-block",
+                    width: "10px",
+                    height: "10px",
+                    borderRadius: "50%",
+                    background: wsStatus === "CONNECTED" ? "#16a34a" : "#ca8a04",
+                    boxShadow: wsStatus === "CONNECTED" ? "0 0 8px #16a34a" : "none"
+                  }} />
+                  <div>
+                    <strong style={{ fontSize: "13px", color: "#166534" }}>
+                      {wsStatus === "CONNECTED" ? "Live Real-Time Tracking Active" : "Connecting to Logistics Feed..."}
+                    </strong>
+                    <div style={{ fontSize: "12px", color: "#15803d" }}>
+                      Real-time updates pushed from Warehouse & Courier appear here automatically.
+                    </div>
+                  </div>
                 </div>
-                <div className="role-buttons-grid">
-                  <button
-                    disabled={isUpdatingStatus}
-                    onClick={() => handleUpdateStatus("DISPATCHED", "Seller Fulfillment Hub, Bangalore")}
-                    className="role-action-btn"
-                  >
-                    🏪 Seller: Dispatch
-                  </button>
-                  <button
-                    disabled={isUpdatingStatus}
-                    onClick={() => handleUpdateStatus("IN_TRANSIT", "Regional Logistics Sorting Center")}
-                    className="role-action-btn"
-                  >
-                    🏭 Warehouse: In-Transit
-                  </button>
-                  <button
-                    disabled={isUpdatingStatus}
-                    onClick={() => handleUpdateStatus("OUT_FOR_DELIVERY", "Local Courier Delivery Partner")}
-                    className="role-action-btn"
-                  >
-                    🛵 Courier: Out for Delivery
-                  </button>
-                  <button
-                    disabled={isUpdatingStatus}
-                    onClick={() => handleUpdateStatus("DELIVERED", "Delivered at Doorstep")}
-                    className="role-action-btn"
-                  >
-                    🎉 Mark Delivered
-                  </button>
-                </div>
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "#166534", background: "#dcfce7", padding: "4px 10px", borderRadius: "12px" }}>
+                  AUTO-SYNC
+                </span>
               </div>
 
               <button

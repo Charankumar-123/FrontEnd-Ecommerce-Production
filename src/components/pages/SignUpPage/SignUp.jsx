@@ -43,9 +43,9 @@ const Signup = () => {
     e.preventDefault();
     try {
       const payload = {
-        userName: userData.userName || userData.name,
-        email: userData.email,
-        mobile: userData.mobile,
+        userName: (userData.userName || userData.name || "").trim(),
+        email: userData.email.trim().toLowerCase(),
+        mobile: userData.mobile ? Number(userData.mobile) : null,
         password: userData.password,
         role: userData.role,
       };
