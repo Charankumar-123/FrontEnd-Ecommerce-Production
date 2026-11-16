@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutR } from "../../../redux/authSlice";
 import { clearCart } from "../../../redux/CartSlice";
 import { getAuthToken, getStoredUser } from "../../../utils/cookieUtils";
+import { getStoredDeliveryAddress, EVENT_NAME } from "../../../Services/locationService";
+import LocationModal from "../../common/LocationModal/LocationModal";
 import "./NavigationBar.css";
-import { useState } from "react";
 
 const NavigationBar = () => {
   const navigate = useNavigate();
@@ -15,6 +16,22 @@ const NavigationBar = () => {
   const cartItems = useSelector((state) => state.cart?.cartItems || []);
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+
+  // Delivery Location State (Live or Manual)
+  const [deliveryAddress, setDeliveryAddress] = useState(getStoredDeliveryAddress());
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleAddressChange = (e) => {
+      if (e.detail) {
+        setDeliveryAddress(e.detail);
+      } else {
+        setDeliveryAddress(getStoredDeliveryAddress());
+      }
+    };
+    window.addEventListener(EVENT_NAME, handleAddressChange);
+    return () => window.removeEventListener(EVENT_NAME, handleAddressChange);
+  }, []);
 
   // Resilient user and role extraction
   let savedRole = userDetail?.role;
@@ -62,6 +79,23 @@ const NavigationBar = () => {
           <span className="navbar-logo-icon">🛍️</span>
           <span className="navbar-brand-text">ModernStore</span>
         </Link>
+
+        {/* Amazon-Style Real-time / Manual Location Pill */}
+        <div
+          className="navbar-location-pill"
+          onClick={() => setIsLocationModalOpen(true)}
+          title="Click to change delivery location (Live GPS or Manual)"
+        >
+          <span className="nav-location-icon">📍</span>
+          <div className="nav-location-text">
+            <span className="nav-location-sub">Deliver to</span>
+            <span className="nav-location-main">
+              {deliveryAddress?.city
+                ? `${deliveryAddress.city} ${deliveryAddress.pincode || ""}`
+                : "Select Location"}
+            </span>
+          </div>
+        </div>
 
         {/* Global Search Bar */}
         <form className="navbar-search-form" onSubmit={handleSearchSubmit}>
@@ -302,6 +336,12 @@ const NavigationBar = () => {
           </div>
         </div>
       </div>
+
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onLocationSelected={(newAddr) => setDeliveryAddress(newAddr)}
+      />
     </header>
   );
 };

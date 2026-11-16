@@ -169,6 +169,50 @@
   color: #ffffff;
 }
 
+/* Amazon-Style Delivery Location Pill */
+.navbar-location-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  user-select: none;
+  margin-left: 10px;
+}
+
+.navbar-location-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.nav-location-icon {
+  font-size: 18px;
+}
+
+.nav-location-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.nav-location-sub {
+  font-size: 11px;
+  color: #b2dfdb;
+}
+
+.nav-location-main {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  max-width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Global Search Bar */
 .navbar-search-form {
   flex: 1;

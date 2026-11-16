@@ -93,11 +93,12 @@ const QUAD_CARDS = [
 const CATEGORY_LIST = [
   "All",
   "Electronics",
-  "Fashion",
-  "Home",
-  "Health & Care",
+  "Fashion & Apparel",
+  "Home & Kitchen",
+  "Health & Personal Care",
+  "Books & Stationery",
   "Gaming & Toys",
-  "Sports",
+  "Sports & Outdoors",
 ];
 
 const ProductCard = () => {
@@ -254,13 +255,26 @@ const ProductCard = () => {
         if (!inName && !inDesc) return false;
       }
 
-      // 2. Category Filter
+      // 2. Category / Department Filter
       if (selectedCategory && selectedCategory !== "All") {
-        const catLower = selectedCategory.toLowerCase();
+        const catLower = selectedCategory.toLowerCase().trim();
+        const pCat = (product.category || "").toLowerCase().trim();
         const pName = (product.name || "").toLowerCase();
         const pDesc = (product.description || "").toLowerCase();
-        const matchesCat = pName.includes(catLower) || pDesc.includes(catLower);
-        if (!matchesCat) return false;
+
+        // Check if product.category matches selected department (exact or partial, e.g. "Fashion" matches "Fashion & Apparel")
+        const categoryMatches =
+          pCat &&
+          (pCat === catLower ||
+            pCat.includes(catLower) ||
+            catLower.includes(pCat));
+
+        // Fallback: check if product name or description includes the category word
+        const textMatches = pName.includes(catLower) || pDesc.includes(catLower);
+
+        if (!categoryMatches && !textMatches) {
+          return false;
+        }
       }
 
       // 3. Today's Deals filter param
@@ -429,35 +443,38 @@ const ProductCard = () => {
             </div>
           </div>
           <div className="horizontal-deals-track" id="horizontal-deals-track">
-            {products.slice(0, 10).map((prod) => (
-              <div
-                key={`deal-${prod.id}`}
-                className="horizontal-deal-card"
-                onClick={() => handleCardClick(prod.id)}
-                title="Click to view details"
-              >
-                <div className="deal-card-img-box">
-                  <img
-                    src={prod.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300"}
-                    alt={prod.name}
-                    className="deal-card-img"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = "https://via.placeholder.com/200x160?text=Deal";
-                    }}
-                  />
-                  <span className="deal-percent-pill">Up to 35% OFF</span>
-                </div>
-                <div className="deal-card-info">
-                  <span className="deal-card-tag">Limited Time</span>
-                  <h4 className="deal-card-name">{prod.name}</h4>
-                  <div className="deal-card-price-row">
-                    <span className="deal-price">₹{prod.price?.toLocaleString("en-IN")}</span>
-                    <span className="deal-mrp">₹{Math.round((prod.price || 500) * 1.35).toLocaleString("en-IN")}</span>
+            {products.slice(0, 10).map((prod) => {
+              const pId = prod.id || prod.productId;
+              return (
+                <div
+                  key={`deal-${pId}`}
+                  className="horizontal-deal-card"
+                  onClick={() => handleCardClick(pId)}
+                  title="Click to view details"
+                >
+                  <div className="deal-card-img-box">
+                    <img
+                      src={prod.image || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300"}
+                      alt={prod.name}
+                      className="deal-card-img"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = "https://via.placeholder.com/200x160?text=Deal";
+                      }}
+                    />
+                    <span className="deal-percent-pill">Up to 35% OFF</span>
+                  </div>
+                  <div className="deal-card-info">
+                    <span className="deal-card-tag">Limited Time</span>
+                    <h4 className="deal-card-name">{prod.name}</h4>
+                    <div className="deal-card-price-row">
+                      <span className="deal-price">₹{prod.price?.toLocaleString("en-IN")}</span>
+                      <span className="deal-mrp">₹{Math.round((prod.price || 500) * 1.35).toLocaleString("en-IN")}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -707,70 +724,74 @@ const ProductCard = () => {
             </div>
           ) : (
             <div className="product-list">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="product-container"
-                  onClick={() => handleCardClick(product.id)}
-                  title="Click to view product & store details"
-                >
-                  {/* Product Image Wrapper */}
-                  <div className="product-image-wrapper">
-                    <img
-                      src={product.image || "https://via.placeholder.com/250x180?text=Product"}
-                      alt={product.name}
-                      className="product-image"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = "https://via.placeholder.com/250x180?text=No+Image";
-                      }}
-                    />
-                    <span className="view-store-badge">Click to View Store</span>
-                  </div>
-
-                  {/* Product Details */}
-                  <div className="product-details">
-                    <div className="product-store-tag">🏪 Verified Store</div>
-                    <h2 className="product-name">{product.name}</h2>
-                    <div className="product-rating">
-                      <span className="stars">★★★★☆</span>
-                      <span className="rating-score">4.5</span>
-                      <span className="review-count">(42)</span>
-                    </div>
-                    <p className="product-description">{product.description}</p>
-
-                    <div className="price-row">
-                      <span className="product-price">
-                        ₹{product.price ? product.price.toFixed(2) : "0.00"}
-                      </span>
-                      <span className="product-mrp">
-                        ₹{product.price ? (product.price * 1.25).toFixed(0) : "0"}
-                      </span>
-                      <span className="discount-tag">20% OFF</span>
-                    </div>
-
-                    <div className="button-group">
-                      <button
-                        onClick={(e) => handleAddToCart(e, product)}
-                        className={`add-to-cart-btn ${isAddedToCart(product.id) ? "added" : ""}`}
-                        disabled={isAddedToCart(product.id)}
-                      >
-                        {isAddedToCart(product.id) ? "✓ Added" : "🛒 Add to Cart"}
-                      </button>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCardClick(product.id);
+              {filteredProducts.map((product) => {
+                const pId = product.id || product.productId;
+                const inCart = isAddedToCart(pId);
+                return (
+                  <div
+                    key={pId}
+                    className="product-container"
+                    onClick={() => handleCardClick(pId)}
+                    title="Click to view product & store details"
+                  >
+                    {/* Product Image Wrapper */}
+                    <div className="product-image-wrapper">
+                      <img
+                        src={product.image || "https://via.placeholder.com/250x180?text=Product"}
+                        alt={product.name}
+                        className="product-image"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "https://via.placeholder.com/250x180?text=No+Image";
                         }}
-                        className="view-details-btn"
-                      >
-                        Details →
-                      </button>
+                      />
+                      <span className="view-store-badge">Click to View Store</span>
+                    </div>
+
+                    {/* Product Details */}
+                    <div className="product-details">
+                      <div className="product-store-tag">🏪 Verified Store</div>
+                      <h2 className="product-name">{product.name}</h2>
+                      <div className="product-rating">
+                        <span className="stars">★★★★☆</span>
+                        <span className="rating-score">4.5</span>
+                        <span className="review-count">(42)</span>
+                      </div>
+                      <p className="product-description">{product.description}</p>
+
+                      <div className="price-row">
+                        <span className="product-price">
+                          ₹{product.price ? product.price.toFixed(2) : "0.00"}
+                        </span>
+                        <span className="product-mrp">
+                          ₹{product.price ? (product.price * 1.25).toFixed(0) : "0"}
+                        </span>
+                        <span className="discount-tag">20% OFF</span>
+                      </div>
+
+                      <div className="button-group">
+                        <button
+                          onClick={(e) => handleAddToCart(e, product)}
+                          className={`add-to-cart-btn ${inCart ? "added" : ""}`}
+                          disabled={inCart}
+                        >
+                          {inCart ? "✓ Added" : "🛒 Add to Cart"}
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCardClick(pId);
+                          }}
+                          className="view-details-btn"
+                        >
+                          Details →
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </main>

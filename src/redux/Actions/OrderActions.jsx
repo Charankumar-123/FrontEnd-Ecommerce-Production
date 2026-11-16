@@ -77,6 +77,16 @@ export const addOrder = createAsyncThunk(
                 body: JSON.stringify({
                     cartItems: orderData.cartItems,
                     totalPrice: orderData.totalPrice,
+                    deliveryAddress: orderData.deliveryAddress,
+                    deliveryCity: orderData.deliveryCity,
+                    deliveryPincode: orderData.deliveryPincode,
+                    deliveryState: orderData.deliveryState,
+                    latitude: orderData.latitude,
+                    longitude: orderData.longitude,
+                    recipientName: orderData.recipientName,
+                    recipientPhone: orderData.recipientPhone,
+                    paymentMethod: orderData.paymentMethod,
+                    paymentId: orderData.paymentId,
                 }),
             });
 

@@ -1,9 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addOrder } from "../../../redux/Actions/OrderActions";
 import { clearCart } from "../../../redux/CartSlice";
 import { getStoredUser } from "../../../utils/cookieUtils";
+import {
+  getStoredDeliveryAddress,
+  detectLiveLocation,
+  EVENT_NAME,
+} from "../../../Services/locationService";
+import LocationModal from "../../common/LocationModal/LocationModal";
 import "./PaymentPage.css";
 
 const POPULAR_BANKS = [
@@ -65,6 +71,40 @@ const PaymentPage = () => {
   const [selectedBank, setSelectedBank] = useState("hdfc");
   const [selectedWallet, setSelectedWallet] = useState("paytm");
 
+  // Delivery Location State (Live GPS or Manual)
+  const [deliveryAddress, setDeliveryAddress] = useState(getStoredDeliveryAddress());
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [locationAlert, setLocationAlert] = useState("");
+
+  useEffect(() => {
+    const handleAddressChange = (e) => {
+      if (e.detail) {
+        setDeliveryAddress(e.detail);
+      } else {
+        setDeliveryAddress(getStoredDeliveryAddress());
+      }
+    };
+    window.addEventListener(EVENT_NAME, handleAddressChange);
+    return () => window.removeEventListener(EVENT_NAME, handleAddressChange);
+  }, []);
+
+  const handleDetectCheckoutLiveLocation = async () => {
+    setIsDetectingLocation(true);
+    setLocationAlert("");
+    try {
+      const live = await detectLiveLocation();
+      setDeliveryAddress(live);
+      setLocationAlert("✓ Real-time GPS location detected & updated!");
+      setTimeout(() => setLocationAlert(""), 4000);
+    } catch (err) {
+      setLocationAlert("⚠️ " + (err.message || "Failed to detect live location."));
+      setTimeout(() => setLocationAlert(""), 6000);
+    } finally {
+      setIsDetectingLocation(false);
+    }
+  };
+
   // Fill Test Card Helper
   const handleFillTestCard = () => {
     setCardData({
@@ -99,7 +139,7 @@ const PaymentPage = () => {
       setPaymentId(generatedId);
       setProcessingState("success");
 
-      // Save order to backend / Redux
+      // Save order to backend / Redux with delivery location
       const orderData = {
         userId,
         cartItems: cartItems.map((item) => ({
@@ -110,6 +150,16 @@ const PaymentPage = () => {
         totalPrice,
         paymentId: generatedId,
         paymentMethod: paymentTab.toUpperCase(),
+        deliveryAddress:
+          deliveryAddress.formattedAddress ||
+          `${deliveryAddress.houseNo || ""}, ${deliveryAddress.street || ""}`,
+        deliveryCity: deliveryAddress.city,
+        deliveryPincode: deliveryAddress.pincode,
+        deliveryState: deliveryAddress.state,
+        latitude: deliveryAddress.latitude,
+        longitude: deliveryAddress.longitude,
+        recipientName: deliveryAddress.name,
+        recipientPhone: deliveryAddress.phone,
       };
 
       try {
@@ -137,14 +187,64 @@ const PaymentPage = () => {
           <div className="checkout-review-column">
             {/* Delivery Address Card */}
             <div className="checkout-card">
-              <div className="card-section-header">
-                <span className="step-number">1</span>
-                <h3>Delivery Address</h3>
+              <div className="card-section-header card-address-header">
+                <div className="header-step-title">
+                  <span className="step-number">1</span>
+                  <h3>Delivery Address</h3>
+                </div>
+                <div className="address-actions-toolbar">
+                  <button
+                    className="detect-live-btn"
+                    onClick={handleDetectCheckoutLiveLocation}
+                    disabled={isDetectingLocation}
+                    title="Detect real-time GPS location"
+                  >
+                    {isDetectingLocation ? (
+                      <>
+                        <span className="btn-spinner-sm"></span> Pinpointing...
+                      </>
+                    ) : (
+                      "🎯 Detect Live Location"
+                    )}
+                  </button>
+                  <button
+                    className="edit-address-btn"
+                    onClick={() => setIsLocationModalOpen(true)}
+                    title="Enter or edit address manually"
+                  >
+                    ✏️ Change / Enter Manually
+                  </button>
+                </div>
               </div>
+
+              {locationAlert && (
+                <div className="checkout-location-alert">{locationAlert}</div>
+              )}
+
               <div className="address-details">
-                <strong>Default Shipping Address</strong>
-                <p>Flat 402, Green Avenue, Tech City, Bangalore, KA - 560001</p>
-                <small className="delivery-speed-tag">⚡ Guaranteed 1-Day Delivery Fulfilled by ModernStore</small>
+                <div className="recipient-row">
+                  <strong className="recipient-name">
+                    {deliveryAddress.name || "Customer"}
+                  </strong>
+                  {deliveryAddress.phone && (
+                    <span className="recipient-phone">📞 {deliveryAddress.phone}</span>
+                  )}
+                  {deliveryAddress.isLive ? (
+                    <span className="live-gps-pill">🛰️ Live GPS Pinpointed</span>
+                  ) : (
+                    <span className="manual-address-pill">📝 Verified Address</span>
+                  )}
+                </div>
+                <p className="address-full-text">
+                  {deliveryAddress.formattedAddress ||
+                    `${deliveryAddress.houseNo ? deliveryAddress.houseNo + ", " : ""}${deliveryAddress.street || ""}, ${deliveryAddress.city}, ${deliveryAddress.state} - ${deliveryAddress.pincode}`}
+                </p>
+                {deliveryAddress.latitude && deliveryAddress.longitude && (
+                  <div className="coordinates-tag">
+                    🌐 Coordinates: {Number(deliveryAddress.latitude).toFixed(4)}° N, {Number(deliveryAddress.longitude).toFixed(4)}° E
+                  </div>
+                )}
+                <small className="delivery-speed-tag">⚡ Guaranteed 1-Day Delivery Fulfilled by Nearest Regional Warehouse</small>
               </div>
             </div>
 
@@ -502,6 +602,13 @@ const PaymentPage = () => {
           </div>
         </div>
       )}
+
+      {/* Location Modal for Live / Manual Address */}
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+        onLocationSelected={(newAddr) => setDeliveryAddress(newAddr)}
+      />
     </div>
   );
 };
